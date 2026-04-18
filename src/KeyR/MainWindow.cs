@@ -143,11 +143,7 @@ public class MainWindow : Window, IComponentConnector
 	{
 		if (_settingsWindow != null)
 		{
-			if (_settingsWindow.WindowState == WindowState.Minimized)
-			{
-				_settingsWindow.WindowState = WindowState.Normal;
-			}
-			_settingsWindow.Activate();
+			_settingsWindow.Close();
 			return;
 		}
 		_settingsWindow = new SettingsWindow(_settings, _macroService, this);
@@ -295,7 +291,7 @@ public class MainWindow : Window, IComponentConnector
 		return $"{value:D2}:{value2:D2}:{value3:D2}";
 	}
 
-	private void RefreshTitleBar()
+	public void RefreshTitleBar()
 	{
 		int eventCount = _macroService.GetEventCount();
 		long durationMs = _macroService.GetDurationMs();

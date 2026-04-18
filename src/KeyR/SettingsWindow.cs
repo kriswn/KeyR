@@ -83,7 +83,7 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 
 	internal StackPanel ItemThemeToggle;
 
-	internal System.Windows.Controls.CheckBox ChkDarkTheme;
+	internal System.Windows.Controls.ComboBox CmbTheme;
 
 	internal Border SectionPlayback;
 
@@ -156,6 +156,10 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 	internal System.Windows.Controls.TextBox TxtPosX;
 
 	internal System.Windows.Controls.TextBox TxtPosY;
+
+	internal Border SectionMacroImport;
+
+	internal StackPanel ItemImportMacros;
 
 	internal Border SectionDataManagement;
 
@@ -280,13 +284,14 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 		TxtPollingInterval.Text = _settings.ConditionsPollingInterval.ToString();
 		ChkShowConfirmations.IsChecked = !_settings.HideDeleteConfirmation;
 		ChkAlwaysOnTop.IsChecked = _settings.AlwaysOnTop;
-		ChkDarkTheme.IsChecked = _settings.IsDarkTheme;
+		CmbTheme.SelectedIndex = ((!_settings.IsDarkTheme) ? 1 : 0);
 		BtnToggleMatchLogic.Content = (_settings.MatchAllConditions ? "Match: ALL" : "Match: ANY");
 		BtnToggleMatchLogic.Tag = (_settings.MatchAllConditions ? "Macro restarts only when ALL enabled\nconditions are met." : "Macro restarts when ANY enabled condition\nis met.");
 		BtnToggleRestartMode.Content = (_settings.UseSmartRestart ? "Logic: SEQUENTIAL" : "Logic: REPETITIVE");
 		BtnToggleRestartMode.Tag = (_settings.UseSmartRestart ? "Once the condition is met, the macro will wait\nfor it to disappear before allowing further restarts." : "Triggers instantly and repeatedly as long as\ncondition is met.");
 		BtnToggleRestrictedMode.Content = (_settings.WaitConditionToRestart ? "Restricted: ON" : "Restricted: OFF");
 		BtnToggleRestrictedMode.Tag = (_settings.WaitConditionToRestart ? "Macro pauses at the end of the timeline\nand waits for conditions before looping." : "Macro loops naturally regardless of\nconditions.");
+		BtnToggleRestrictedMode.Visibility = ((!_settings.UseSmartRestart) ? Visibility.Collapsed : Visibility.Visible);
 		UpdatePrefUIState();
 		UpdatePositionUI();
 		RefreshConditionsList();
@@ -496,13 +501,13 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 		SectionDataManagement.Visibility = Visibility.Visible;
 	}
 
-	private void ChkDarkTheme_Changed(object sender, RoutedEventArgs e)
+	private void CmbTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
 	{
 		if (_isLoaded)
 		{
-			bool valueOrDefault = ChkDarkTheme.IsChecked == true;
-			_settings.IsDarkTheme = valueOrDefault;
-			ThemeEngine.Apply(valueOrDefault);
+			bool flag = CmbTheme.SelectedIndex == 0;
+			_settings.IsDarkTheme = flag;
+			ThemeEngine.Apply(flag);
 			_settings.Save();
 		}
 	}
@@ -816,6 +821,7 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 		string text = (_settings.UseSmartRestart ? "Once the condition is met, the macro will wait\nfor it to disappear before allowing further restarts." : "Triggers instantly and repeatedly as long as\ncondition is met.");
 		BtnToggleRestartMode.Content = (_settings.UseSmartRestart ? "Logic: SEQUENTIAL" : "Logic: REPETITIVE");
 		BtnToggleRestartMode.Tag = text;
+		BtnToggleRestrictedMode.Visibility = ((!_settings.UseSmartRestart) ? Visibility.Collapsed : Visibility.Visible);
 		RefreshHoverTooltip(text);
 		SaveSettingsFromUI();
 	}
@@ -1018,6 +1024,7 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 				_settings.MatchAllConditions = settings.MatchAllConditions;
 				_settings.RestartConditions = settings.RestartConditions;
 				_settings.IsDarkTheme = settings.IsDarkTheme;
+				_settings.UseSmartRestart = settings.UseSmartRestart;
 				ThemeEngine.Apply(_settings.IsDarkTheme);
 				LoadSettingsToUI();
 				SetActiveTab(_isBasicTab);
@@ -1028,6 +1035,52 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 		}
 		catch
 		{
+		}
+	}
+
+	private void BtnImportInformaalTask_Click(object sender, RoutedEventArgs e)
+	{
+		Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog
+		{
+			Filter = "InformaalTask Scripts (*.txt)|*.txt|All Files (*.*)|*.*"
+		};
+		bool dontAskAgain;
+		if (openFileDialog.ShowDialog() == true)
+		{
+			try
+			{
+				string[] lines = File.ReadAllLines(openFileDialog.FileName);
+				_macroService.ImportInformaalTask(lines);
+				_mainWindow.RefreshTitleBar();
+				ThemedConfirmWindow.Show(this, "Successfully converted InformaalTask macro:\n" + System.IO.Path.GetFileName(openFileDialog.FileName), out dontAskAgain, "OK", showDontAsk: false, isPositive: true);
+			}
+			catch (Exception ex)
+			{
+				ThemedConfirmWindow.Show(this, "Failed to parse InformaalTask file: " + ex.Message, out dontAskAgain, "OK", showDontAsk: false);
+			}
+		}
+	}
+
+	private void BtnImportTinyTask_Click(object sender, RoutedEventArgs e)
+	{
+		Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog
+		{
+			Filter = "TinyTask Recordings (*.rec)|*.rec|All Files (*.*)|*.*"
+		};
+		bool dontAskAgain;
+		if (openFileDialog.ShowDialog() == true)
+		{
+			try
+			{
+				byte[] rawData = File.ReadAllBytes(openFileDialog.FileName);
+				_macroService.ImportTinyTask(rawData);
+				_mainWindow.RefreshTitleBar();
+				ThemedConfirmWindow.Show(this, "Successfully extracted generic TinyTask records from:\n" + System.IO.Path.GetFileName(openFileDialog.FileName), out dontAskAgain, "OK", showDontAsk: false, isPositive: true);
+			}
+			catch (Exception ex)
+			{
+				ThemedConfirmWindow.Show(this, "Failed to parse TinyTask binary: " + ex.Message, out dontAskAgain, "OK", showDontAsk: false);
+			}
 		}
 	}
 
@@ -1226,9 +1279,8 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 			ItemThemeToggle = (StackPanel)target;
 			break;
 		case 18:
-			ChkDarkTheme = (System.Windows.Controls.CheckBox)target;
-			ChkDarkTheme.Checked += ChkDarkTheme_Changed;
-			ChkDarkTheme.Unchecked += ChkDarkTheme_Changed;
+			CmbTheme = (System.Windows.Controls.ComboBox)target;
+			CmbTheme.SelectionChanged += CmbTheme_SelectionChanged;
 			break;
 		case 19:
 			SectionPlayback = (Border)target;
@@ -1389,18 +1441,30 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 			TxtPosY.LostFocus += PrefsChanged;
 			break;
 		case 69:
-			SectionDataManagement = (Border)target;
+			SectionMacroImport = (Border)target;
 			break;
 		case 70:
-			ItemImportExport = (StackPanel)target;
+			ItemImportMacros = (StackPanel)target;
 			break;
 		case 71:
-			((System.Windows.Controls.Button)target).Click += BtnImportSettings_Click;
+			((System.Windows.Controls.Button)target).Click += BtnImportInformaalTask_Click;
 			break;
 		case 72:
-			((System.Windows.Controls.Button)target).Click += BtnExportSettings_Click;
+			((System.Windows.Controls.Button)target).Click += BtnImportTinyTask_Click;
 			break;
 		case 73:
+			SectionDataManagement = (Border)target;
+			break;
+		case 74:
+			ItemImportExport = (StackPanel)target;
+			break;
+		case 75:
+			((System.Windows.Controls.Button)target).Click += BtnImportSettings_Click;
+			break;
+		case 76:
+			((System.Windows.Controls.Button)target).Click += BtnExportSettings_Click;
+			break;
+		case 77:
 			GlobalOverlay = (Border)target;
 			GlobalOverlay.MouseLeftButtonDown += Overlay_MouseLeftButtonDown;
 			break;
