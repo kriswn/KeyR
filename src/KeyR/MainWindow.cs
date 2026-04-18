@@ -33,6 +33,8 @@ public class MainWindow : Window, IComponentConnector
 
 	private DispatcherTimer _countdownTimer;
 
+	private DispatcherTimer _recordingTimer;
+
 	private static readonly SolidColorBrush RecordingBrush = CreateFrozenBrush("#e63946");
 
 	private static readonly SolidColorBrush PlayingBrush = CreateFrozenBrush("#2a9d8f");
@@ -89,6 +91,9 @@ public class MainWindow : Window, IComponentConnector
 		//IL_0143: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
 		//IL_015d: Expected O, but got Unknown
+		//IL_0175: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_018f: Expected O, but got Unknown
 		InitializeComponent();
 		Title = "KeyR"; base.Loaded += (s, e) => CheckAndReplaceSupTask(this);
 		_settings = Settings.Load();
@@ -115,6 +120,11 @@ public class MainWindow : Window, IComponentConnector
 			Interval = TimeSpan.FromMilliseconds(100L, 0L)
 		};
 		_countdownTimer.Tick += CountdownTimer_Tick;
+		_recordingTimer = new DispatcherTimer
+		{
+			Interval = TimeSpan.FromMilliseconds(100L, 0L)
+		};
+		_recordingTimer.Tick += RecordingTimer_Tick;
 	}
 
 	private void ApplyResolutionScaling()
@@ -203,6 +213,14 @@ public class MainWindow : Window, IComponentConnector
 			BtnPrefs.IsEnabled = !flag;
 			BtnRec.IsEnabled = !isPlaying;
 			BtnPlay.IsEnabled = !isRecording;
+			if (isRecording)
+			{
+				_recordingTimer.Start();
+			}
+			else
+			{
+				_recordingTimer.Stop();
+			}
 			if (isPlaying)
 			{
 				_countdownTimer.Start();
@@ -310,6 +328,20 @@ public class MainWindow : Window, IComponentConnector
 		else
 		{
 			TxtTitleDuration.Text = "";
+		}
+	}
+
+	private void RecordingTimer_Tick(object sender, EventArgs e)
+	{
+		if (!_macroService.IsRecording)
+		{
+			_recordingTimer.Stop();
+			RefreshTitleBar();
+		}
+		else
+		{
+			long recordingElapsedMs = _macroService.RecordingElapsedMs;
+			TxtTitleDuration.Text = FormatDuration(recordingElapsedMs);
 		}
 	}
 

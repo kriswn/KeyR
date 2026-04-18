@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using System.Windows;
+using Point = System.Drawing.Point;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using Gma.System.MouseKeyHook;
@@ -13,9 +16,98 @@ namespace SupTask;
 
 public class MacroService : IDisposable
 {
+	private static class NativeMethods
+	{
+		public delegate nint LowLevelMouseProc(int nCode, nint wParam, nint lParam);
+
+		public delegate nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam);
+
+		public struct MSLLHOOKSTRUCT
+		{
+			public Point pt;
+
+			public int mouseData;
+
+			public int flags;
+
+			public int time;
+
+			public nint dwExtraInfo;
+		}
+
+		public struct KBDLLHOOKSTRUCT
+		{
+			public uint vkCode;
+
+			public uint scanCode;
+
+			public uint flags;
+
+			public uint time;
+
+			public nint dwExtraInfo;
+		}
+
+		public const int WH_MOUSE_LL = 14;
+
+		public const int WH_KEYBOARD_LL = 13;
+
+		public const int WM_MOUSEMOVE = 512;
+
+		public const int WM_LBUTTONDOWN = 513;
+
+		public const int WM_LBUTTONUP = 514;
+
+		public const int WM_RBUTTONDOWN = 516;
+
+		public const int WM_RBUTTONUP = 517;
+
+		public const int WM_MBUTTONDOWN = 519;
+
+		public const int WM_MBUTTONUP = 520;
+
+		public const int WM_MOUSEWHEEL = 522;
+
+		public const int WM_MOUSEHWHEEL = 526;
+
+		public const int WM_XBUTTONDOWN = 523;
+
+		public const int WM_XBUTTONUP = 524;
+
+		public const int WM_KEYDOWN = 256;
+
+		public const int WM_KEYUP = 257;
+
+		public const int WM_SYSKEYDOWN = 260;
+
+		public const int WM_SYSKEYUP = 261;
+
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern nint SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, nint hMod, uint dwThreadId);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern nint SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, nint hMod, uint dwThreadId);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool UnhookWindowsHookEx(nint hhk);
+
+		[DllImport("user32.dll")]
+		public static extern nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
+
+		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+		public static extern nint GetModuleHandle(string lpModuleName);
+	}
+
 	private List<MacroEvent> _events = new List<MacroEvent>(2048);
 
-	private IKeyboardMouseEvents _recHook;
+	private nint _mouseHookHandle = IntPtr.Zero;
+
+	private nint _keyboardHookHandle = IntPtr.Zero;
+
+	private NativeMethods.LowLevelMouseProc _mouseHookProc;
+
+	private NativeMethods.LowLevelKeyboardProc _keyboardHookProc;
 
 	private IKeyboardMouseEvents _hotkeyHook;
 
@@ -38,6 +130,8 @@ public class MacroService : IDisposable
 	private const long MAX_RECORDING_MS = 356400000L;
 
 	private long _totalRecordedMs;
+
+	private long _recordingStartTicks;
 
 	private volatile int _loopsRemaining;
 
@@ -86,6 +180,19 @@ public class MacroService : IDisposable
 	}
 
 	public bool HotkeysSuspended { get; set; }
+
+	public long RecordingElapsedMs
+	{
+		get
+		{
+			long num = Interlocked.Read(in _recordingStartTicks);
+			if (num == 0L)
+			{
+				return 0L;
+			}
+			return (long)((double)(Stopwatch.GetTimestamp() - num) * 1000.0 / (double)Stopwatch.Frequency);
+		}
+	}
 
 	public long PlaybackElapsedMs
 	{
@@ -212,46 +319,155 @@ public class MacroService : IDisposable
 
 	private void StartRecording()
 	{
-		if (!_isPlaying)
+		if (_isPlaying)
 		{
-			_events.Clear();
-			_recHook = Hook.GlobalEvents();
-			_recHook.MouseDownExt += RecHook_MouseDownExt;
-			_recHook.MouseUpExt += RecHook_MouseUpExt;
-			_recHook.MouseMove += RecHook_MouseMove;
-			_recHook.MouseWheelExt += GlobalHook_MouseWheelExt;
-			_recHook.KeyDown += RecHook_KeyDown;
-			_recHook.KeyUp += RecHook_KeyUp;
-			_isRecording = true;
-			_totalRecordedMs = 0L;
-			_stopwatch.Restart();
-			this.OnStatusChanged?.Invoke("Recording", isRecording: true, isPlaying: false);
+			return;
 		}
+		_events.Clear();
+		_mouseHookProc = MouseHookCallback;
+		_keyboardHookProc = KeyboardHookCallback;
+		using (Process process = Process.GetCurrentProcess())
+		{
+			using ProcessModule processModule = process.MainModule;
+			nint moduleHandle = NativeMethods.GetModuleHandle(processModule.ModuleName);
+			_mouseHookHandle = NativeMethods.SetWindowsHookEx(14, _mouseHookProc, moduleHandle, 0u);
+			_keyboardHookHandle = NativeMethods.SetWindowsHookEx(13, _keyboardHookProc, moduleHandle, 0u);
+		}
+		_isRecording = true;
+		_totalRecordedMs = 0L;
+		Interlocked.Exchange(ref _recordingStartTicks, Stopwatch.GetTimestamp());
+		_stopwatch.Restart();
+		this.OnStatusChanged?.Invoke("Recording", isRecording: true, isPlaying: false);
 	}
 
-	private void RecHook_MouseDownExt(object sender, MouseEventExtArgs e)
+	private nint MouseHookCallback(int nCode, nint wParam, nint lParam)
 	{
-		LogMouse(e, true);
+		if (nCode >= 0 && _isRecording)
+		{
+			NativeMethods.MSLLHOOKSTRUCT mSLLHOOKSTRUCT = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
+			int num = (int)wParam;
+			double num2 = (double)_stopwatch.ElapsedTicks * 1000.0 / (double)Stopwatch.Frequency;
+			_stopwatch.Restart();
+			_totalRecordedMs += (long)num2;
+			if (_totalRecordedMs >= 356400000)
+			{
+				System.Windows.Application current = System.Windows.Application.Current;
+				if (current != null)
+				{
+					((DispatcherObject)current).Dispatcher.BeginInvoke((Delegate)(Action)delegate
+					{
+						StopRecording();
+					}, Array.Empty<object>());
+				}
+				return NativeMethods.CallNextHookEx(_mouseHookHandle, nCode, wParam, lParam);
+			}
+			string button = "Move";
+			bool isDown = false;
+			int scrollDelta = 0;
+			bool flag = true;
+			switch (num)
+			{
+			case 512:
+				button = "Move";
+				break;
+			case 513:
+				button = "Left";
+				isDown = true;
+				break;
+			case 514:
+				button = "Left";
+				isDown = false;
+				break;
+			case 516:
+				button = "Right";
+				isDown = true;
+				break;
+			case 517:
+				button = "Right";
+				isDown = false;
+				break;
+			case 519:
+				button = "Middle";
+				isDown = true;
+				break;
+			case 520:
+				button = "Middle";
+				isDown = false;
+				break;
+			case 522:
+				button = "Wheel";
+				scrollDelta = (short)((mSLLHOOKSTRUCT.mouseData >> 16) & 0xFFFF);
+				break;
+			case 526:
+				button = "HWheel";
+				scrollDelta = (short)((mSLLHOOKSTRUCT.mouseData >> 16) & 0xFFFF);
+				break;
+			case 523:
+				button = ((((mSLLHOOKSTRUCT.mouseData >> 16) & 0xFFFF) == 1) ? "XButton1" : "XButton2");
+				isDown = true;
+				break;
+			case 524:
+				button = ((((mSLLHOOKSTRUCT.mouseData >> 16) & 0xFFFF) == 1) ? "XButton1" : "XButton2");
+				isDown = false;
+				break;
+			default:
+				flag = false;
+				break;
+			}
+			if (flag)
+			{
+				_events.Add(new MacroEvent
+				{
+					Type = EventType.MouseEvent,
+					Delay = num2,
+					X = mSLLHOOKSTRUCT.pt.X,
+					Y = mSLLHOOKSTRUCT.pt.Y,
+					Button = button,
+					IsDown = isDown,
+					ScrollDelta = scrollDelta
+				});
+			}
+		}
+		return NativeMethods.CallNextHookEx(_mouseHookHandle, nCode, wParam, lParam);
 	}
 
-	private void RecHook_MouseUpExt(object sender, MouseEventExtArgs e)
+	private nint KeyboardHookCallback(int nCode, nint wParam, nint lParam)
 	{
-		LogMouse(e, false);
-	}
-
-	private void RecHook_MouseMove(object sender, MouseEventArgs e)
-	{
-		LogMouse(e, null);
-	}
-
-	private void RecHook_KeyDown(object sender, KeyEventArgs e)
-	{
-		LogKey(e, isDown: true);
-	}
-
-	private void RecHook_KeyUp(object sender, KeyEventArgs e)
-	{
-		LogKey(e, isDown: false);
+		if (nCode >= 0 && _isRecording)
+		{
+			NativeMethods.KBDLLHOOKSTRUCT kBDLLHOOKSTRUCT = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
+			int num = (int)wParam;
+			bool flag = num == 256 || num == 260;
+			bool flag2 = num == 257 || num == 261;
+			if (flag || flag2)
+			{
+				double num2 = (double)_stopwatch.ElapsedTicks * 1000.0 / (double)Stopwatch.Frequency;
+				_stopwatch.Restart();
+				_totalRecordedMs += (long)num2;
+				if (_totalRecordedMs >= 356400000)
+				{
+					System.Windows.Application current = System.Windows.Application.Current;
+					if (current != null)
+					{
+						((DispatcherObject)current).Dispatcher.BeginInvoke((Delegate)(Action)delegate
+						{
+							StopRecording();
+						}, Array.Empty<object>());
+					}
+					return NativeMethods.CallNextHookEx(_keyboardHookHandle, nCode, wParam, lParam);
+				}
+				bool isExtendedKey = (kBDLLHOOKSTRUCT.flags & 1) != 0;
+				_events.Add(new MacroEvent
+				{
+					Type = EventType.KeyEvent,
+					Delay = num2,
+					KeyCode = (int)kBDLLHOOKSTRUCT.vkCode,
+					IsDown = flag,
+					IsExtendedKey = isExtendedKey
+				});
+			}
+		}
+		return NativeMethods.CallNextHookEx(_keyboardHookHandle, nCode, wParam, lParam);
 	}
 
 	private void StopRecording()
@@ -261,18 +477,18 @@ public class MacroService : IDisposable
 			return;
 		}
 		_isRecording = false;
-		if (_recHook != null)
+		if (_mouseHookHandle != IntPtr.Zero)
 		{
-			_recHook.MouseDownExt -= RecHook_MouseDownExt;
-			_recHook.MouseUpExt -= RecHook_MouseUpExt;
-			_recHook.MouseMove -= RecHook_MouseMove;
-			_recHook.MouseWheelExt -= GlobalHook_MouseWheelExt;
-			_recHook.KeyDown -= RecHook_KeyDown;
-			_recHook.KeyUp -= RecHook_KeyUp;
-			_recHook.Dispose();
-			_recHook = null;
+			NativeMethods.UnhookWindowsHookEx(_mouseHookHandle);
+			_mouseHookHandle = IntPtr.Zero;
+		}
+		if (_keyboardHookHandle != IntPtr.Zero)
+		{
+			NativeMethods.UnhookWindowsHookEx(_keyboardHookHandle);
+			_keyboardHookHandle = IntPtr.Zero;
 		}
 		_stopwatch.Stop();
+		Interlocked.Exchange(ref _recordingStartTicks, 0L);
 		BypassInput.ReleaseModifiers();
 		if (_events.Count > 0 && _events.Last().Type == EventType.KeyEvent)
 		{
@@ -283,82 +499,6 @@ public class MacroService : IDisposable
 			}
 		}
 		this.OnStatusChanged?.Invoke($"Stored {_events.Count} acts", isRecording: false, isPlaying: false);
-	}
-
-	private void GlobalHook_MouseWheelExt(object sender, MouseEventExtArgs e)
-	{
-		double delay = (double)_stopwatch.ElapsedTicks * 1000.0 / (double)Stopwatch.Frequency;
-		_stopwatch.Restart();
-		_events.Add(new MacroEvent
-		{
-			Type = EventType.MouseEvent,
-			Delay = delay,
-			X = e.X,
-			Y = e.Y,
-			Button = "Wheel",
-			ScrollDelta = e.Delta
-		});
-	}
-
-	private void LogMouse(MouseEventArgs e, bool? isDown)
-	{
-		double num = (double)_stopwatch.ElapsedTicks * 1000.0 / (double)Stopwatch.Frequency;
-		_stopwatch.Restart();
-		_totalRecordedMs += (long)num;
-		if (_totalRecordedMs >= 356400000)
-		{
-			System.Windows.Application current = System.Windows.Application.Current;
-			if (current != null)
-			{
-				((DispatcherObject)current).Dispatcher.BeginInvoke((Delegate)(Action)delegate
-				{
-					StopRecording();
-				}, Array.Empty<object>());
-			}
-			return;
-		}
-		string button = "Move";
-		if (isDown.HasValue)
-		{
-			button = ((e.Button == MouseButtons.Left) ? "Left" : ((e.Button == MouseButtons.Right) ? "Right" : ((e.Button == MouseButtons.Middle) ? "Middle" : "Move")));
-		}
-		_events.Add(new MacroEvent
-		{
-			Type = EventType.MouseEvent,
-			Delay = num,
-			X = e.X,
-			Y = e.Y,
-			Button = button,
-			IsDown = (isDown == true)
-		});
-	}
-
-	private void LogKey(KeyEventArgs e, bool isDown)
-	{
-		double num = (double)_stopwatch.ElapsedTicks * 1000.0 / (double)Stopwatch.Frequency;
-		_stopwatch.Restart();
-		_totalRecordedMs += (long)num;
-		if (_totalRecordedMs >= 356400000)
-		{
-			System.Windows.Application current = System.Windows.Application.Current;
-			if (current != null)
-			{
-				((DispatcherObject)current).Dispatcher.BeginInvoke((Delegate)(Action)delegate
-				{
-					StopRecording();
-				}, Array.Empty<object>());
-			}
-		}
-		else
-		{
-			_events.Add(new MacroEvent
-			{
-				Type = EventType.KeyEvent,
-				Delay = num,
-				KeyCode = (int)e.KeyCode,
-				IsDown = isDown
-			});
-		}
 	}
 
 	private void StartPlaying(Settings settings)
@@ -463,9 +603,14 @@ public class MacroService : IDisposable
 						{
 							break;
 						}
-						if (num4 - timestamp2 > Stopwatch.Frequency / 1000 * 15)
+						long num5 = num4 - timestamp2;
+						if (num5 > Stopwatch.Frequency / 1000 * 15)
 						{
 							Thread.Sleep(1);
+						}
+						else if (num5 > Stopwatch.Frequency / 1000 * 2)
+						{
+							Thread.Sleep(0);
 						}
 						else
 						{
@@ -496,7 +641,7 @@ public class MacroService : IDisposable
 					}
 					else
 					{
-						BypassInput.SendKey((ushort)@event.KeyCode, @event.IsDown);
+						BypassInput.SendKey((ushort)@event.KeyCode, @event.IsDown, @event.IsExtendedKey);
 					}
 				}
 				if (settings.WaitConditionToRestart && !token.IsCancellationRequested && !_restartRequested)
@@ -1110,4 +1255,5 @@ public class MacroService : IDisposable
 		}
 	}
 }
+
 

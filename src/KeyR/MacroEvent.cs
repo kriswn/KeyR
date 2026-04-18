@@ -17,5 +17,7 @@ public class MacroEvent
 	public int KeyCode { get; set; }
 
 	public int ScrollDelta { get; set; }
+
+	public bool IsExtendedKey { get; set; }
 }
 
