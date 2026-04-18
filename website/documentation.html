@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="darkreader-lock">
+    <title>Documentation — KeyR</title>
+    <link rel="icon" type="image/png" href="appIcon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #08080c;
+            --bg-secondary: #0e0e14;
+            --bg-card: #131319;
+            --bg-card-hover: #1a1a22;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(255, 255, 255, 0.1);
+            --text-primary: #eaeaf0;
+            --text-secondary: #8e8ea0;
+            --text-muted: #5a5a6e;
+            --accent: #d4943a;
+            --accent-glow: rgba(212, 148, 58, 0.25);
+            --accent-subtle: rgba(212, 148, 58, 0.08);
+            --accent-secondary: #7c6cc8;
+            --accent-blue: #5a8ed4;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.025;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 200px;
+        }
+
+        .bg-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.06;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .bg-glow--teal {
+            width: 500px; height: 500px;
+            background: var(--accent);
+            top: -150px; right: 10%;
+            animation: drift 25s ease-in-out infinite;
+        }
+        .bg-glow--blue {
+            width: 400px; height: 400px;
+            background: var(--accent-secondary);
+            bottom: -100px; left: 5%;
+            animation: drift 30s ease-in-out infinite reverse;
+        }
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -15px); }
+        }
+
+        .section {
+            padding: 80px 0;
+            position: relative;
+            content-visibility: auto;
+            contain-intrinsic-size: 1px 800px;
+        }
+        
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ── Navigation ── */
+        .nav {
+            display: grid;
+            grid-template-columns: 1fr minmax(0, auto) 1fr;
+            align-items: center;
+            padding: 0;
+            margin: 16px 0 32px;
+            gap: 24px;
+            position: sticky;
+            top: 16px;
+            z-index: 100;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(0);
+            pointer-events: none;
+            will-change: transform;
+        }
+        .nav--scrolled { transform: translateY(-4px); }
+        .nav__brand, .nav__links, .nav__actions {
+            pointer-events: auto;
+            transition: all 0.4s ease;
+            background: rgba(8, 8, 12, 0);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            border: 1px solid transparent;
+            will-change: background, backdrop-filter, border, box-shadow;
+        }
+        .nav--scrolled .nav__brand,
+        .nav--scrolled .nav__links,
+        .nav--scrolled .nav__actions {
+            background: rgba(8, 8, 12, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .nav__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            justify-self: start;
+            padding: 8px 20px;
+            border-radius: 100px;
+        }
+        .nav__logo {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: var(--bg-card);
+        }
+        .nav__title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+        .nav__title span { color: var(--accent); }
+        .nav__links {
+            display: flex;
+            align-items: center;
+            justify-self: center;
+            padding: 8px 12px;
+            border-radius: 100px;
+            max-width: 100%;
+            min-width: 0;
+            gap: 0;
+        }
+        .nav__scroll-area {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 0 4px;
+        }
+        .nav__scroll-area::-webkit-scrollbar { display: none; }
+        .nav__divider {
+            width: 1px; height: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 0 6px;
+            flex-shrink: 0;
+        }
+        .nav__links a {
+            flex-shrink: 0;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 14px;
+            padding: 6px 14px;
+            border-radius: 100px;
+            transition: all 0.2s ease;
+        }
+        .nav__links a:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
+        
+        .nav__actions {
+            display: flex;
+            align-items: center;
+            justify-self: end;
+            padding: 8px 12px;
+            border-radius: 100px;
+        }
+
+        /* ── Auth Buttons ── */
+        .auth-group { display: flex; gap: 8px; align-items: center; }
+        .btn--auth {
+            padding: 7px 18px; border-radius: 100px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.25s ease; text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn--login { color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.08); background: transparent; }
+        .btn--login:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.04); border-color: rgba(255,255,255,0.12); }
+        .btn--register { background: var(--accent); color: #0a0a0f; border: 1px solid var(--accent); font-weight: 700; }
+        .btn--register:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        /* ── Hamburger ── */
+        .hamburger {
+            display: none; flex-direction: column; gap: 5px; cursor: pointer;
+            padding: 10px; z-index: 1001; background: transparent; border: none;
+        }
+        .hamburger span {
+            display: block; width: 22px; height: 2px; background: var(--text-primary);
+            border-radius: 2px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; top: 0; right: -100%; width: 300px;
+            height: 100vh; height: 100dvh; background: transparent;
+            z-index: 1000; padding: 20px; display: flex; flex-direction: column;
+            gap: 12px; transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none;
+        }
+        .sidebar--open { right: 0; }
+        .sidebar__links, .sidebar__footer {
+            pointer-events: auto;
+            background: rgba(8, 8, 12, 0.85);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border-radius: 20px; padding: 16px;
+        }
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+            z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .sidebar-overlay--active { opacity: 1; pointer-events: auto; }
+        .sidebar__links {
+            display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+            overflow-y: auto; width: 100%; scrollbar-width: none; min-height: 0; flex-shrink: 1;
+        }
+        .sidebar__links::-webkit-scrollbar { display: none; }
+        .sidebar__divider { width: 100%; height: 1px; background: rgba(255,255,255,0.06); margin: 4px 0; flex-shrink: 0; }
+        .sidebar__link {
+            font-size: 16px; font-weight: 500; color: var(--text-secondary); text-decoration: none;
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: flex-start;
+            gap: 10px; padding: 10px 14px; border-radius: 12px; width: 100%; box-sizing: border-box;
+        }
+        .sidebar__link:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); }
+        .sidebar__footer { display: flex; flex-direction: row; gap: 8px; }
+        .sidebar__footer .btn--auth { flex: 1; padding: 10px 0; justify-content: center; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            z-index: 2000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay--active { opacity: 1; pointer-events: auto; }
+        .modal {
+            background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; padding: 40px; max-width: 380px; width: 90%;
+            text-align: center; transform: scale(0.92);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+        }
+        .modal-overlay--active .modal { transform: scale(1); }
+        .modal__icon { font-size: 40px; margin-bottom: 16px; display: block; }
+        .modal__title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 10px; color: white; }
+        .modal__text { color: var(--text-secondary); margin-bottom: 28px; font-size: 14px; line-height: 1.6; }
+        .modal__btn {
+            background: var(--accent); color: #0a0a0f; border: none; padding: 11px 28px;
+            border-radius: 100px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.25s;
+        }
+        .modal__btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        /* ── Back to Top ── */
+        .back-to-top {
+            position: fixed; bottom: 28px; right: 28px; width: 44px; height: 44px;
+            border-radius: 50%; background: rgba(8, 8, 12, 0.8);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 90; opacity: 0; visibility: hidden; transform: translateY(16px) translateZ(0);
+            will-change: transform, opacity; transition: all 0.3s ease; text-decoration: none;
+        }
+        .back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0) translateZ(0); }
+        .back-to-top:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); transform: translateY(-3px); }
+
+        /* ── Content Styles ── */
+        .header { padding: 80px 0 40px; text-align: left; }
+        .header__title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 44px; font-weight: 700; letter-spacing: -1.5px; margin-bottom: 16px;
+        }
+        .header__desc { font-size: 17px; color: var(--text-secondary); max-width: 640px; line-height: 1.7; }
+        .header__github-btn {
+            display: flex; align-items: center; gap: 8px; padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px; color: #eaeaf0; text-decoration: none;
+            font-size: 14px; font-weight: 600; flex-shrink: 0; margin-top: 12px;
+            transition: all 0.2s ease;
+        }
+        .header__github-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .doc-section { margin-bottom: 80px; }
+        .doc-section__version {
+            display: inline-block; padding: 4px 12px;
+            background: var(--accent-subtle); color: var(--accent);
+            border-radius: 6px; font-size: 13px; font-weight: 700; margin-bottom: 14px;
+        }
+        .doc-section__title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px;
+        }
+        .doc-section__content { color: var(--text-secondary); }
+        .doc-section__content p { margin-bottom: 18px; font-size: 15px; line-height: 1.7; }
+        
+        .feature-list { margin: 28px 0; border-left: 2px solid rgba(255,255,255,0.06); padding-left: 24px; }
+        .feature-list__item { margin-bottom: 22px; list-style: none; }
+        .feature-list__name { font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 4px; font-size: 15px; }
+        .feature-list__desc { font-size: 14px; line-height: 1.7; }
+        .feature-list__sub { padding-left: 16px; border-left: 1px solid rgba(255,255,255,0.05); margin: 10px 0 10px 4px; font-size: 13px; line-height: 1.7; }
+
+        .tech-specs {
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-lg); padding: 28px; margin-top: 32px;
+        }
+        .tech-specs__title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--accent-blue); }
+        .tech-specs__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .tech-tag { display: block; }
+        .tech-tag__label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+        .tech-tag__value { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+
+        footer { border-top: 1px solid rgba(255,255,255,0.04); padding: 40px 0; margin-top: 60px; text-align: center; color: var(--text-muted); font-size: 12px; }
+        
+        .accent { color: var(--accent); }
+        .accent-gradient {
+            background: linear-gradient(135deg, #d4943a 0%, #7c6cc8 50%, #c44040 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; color: transparent; display: inline-block; font-weight: 900;
+        }
+        .highlight { color: var(--text-primary); font-weight: 600; }
+
+        .fade-in { opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); will-change: opacity, transform; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 1024px) {
+            .section { padding: 50px 0; }
+            .nav {
+                padding: 0; grid-template-columns: 1fr auto !important;
+                position: fixed !important; top: auto !important; bottom: 20px !important;
+                left: 20px !important; right: 20px !important; transform: translateZ(0) !important;
+                width: auto; margin: 0 !important; z-index: 1000;
+            }
+            .nav__brand, .nav__actions {
+                background: rgba(8, 8, 12, 0.8) !important;
+                backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+            }
+            .nav__links { display: none !important; }
+            .auth-group { display: none !important; }
+            .hamburger { display: flex !important; }
+            .nav { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+            .nav.nav--hidden { transform: translateY(150%) !important; }
+            .nav__actions {
+                grid-column: 2; justify-self: end; padding: 10px 12px !important;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+            }
+            .nav__actions:hover {
+                background: rgba(255, 255, 255, 0.06) !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            .sidebar { flex-direction: column-reverse; justify-content: flex-start; padding-top: 20px; padding-bottom: 90px; }
+            .back-to-top { bottom: 90px; right: 24px; }
+            body.nav-is-hidden .back-to-top { bottom: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow bg-glow--teal"></div>
+    <div class="bg-glow bg-glow--blue"></div>
+
+    <div class="page-wrapper">
+        <nav class="nav">
+            <a href="index.html" class="nav__brand">
+                <img src="appIcon.png" alt="KeyR Logo" class="nav__logo">
+                <span class="nav__title">Key<span>R</span></span>
+            </a>
+            
+            <div class="nav__links">
+                <a href="index.html">Home</a>
+                <div class="nav__divider"></div>
+                <div class="nav__scroll-area" id="navScrollArea">
+                    <a href="#v34">v0.3.4</a>
+                      <a href="#v33">v0.3.3</a>
+                    <a href="#v32">v0.3.2</a>
+                    <a href="#v31">v0.3.1</a>
+                    <a href="#v30">v0.3.0</a>
+                    <a href="#v20">v0.2.0</a>
+                    <a href="#v12">v0.1.2</a>
+                    <a href="#v11">v0.1.1</a>
+                    <a href="#v10">v0.1.0</a>
+                </div>
+                <div class="nav__divider"></div>
+                <a href="versions.html">History</a>
+            </div>
+
+            <div class="nav__actions">
+                <div class="auth-group">
+                    <button class="btn--auth btn--login" onclick="showDevModal()">Login</button>
+                    <button class="btn--auth btn--register" onclick="showDevModal()">Register</button>
+                </div>
+                <button class="hamburger" id="hamburgerBtn" aria-label="Toggle Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="header fade-in" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h1 class="header__title">Project <span style="color: white;">Documentation</span></h1>
+                <p class="header__desc">A comprehensive guide to the evolution of KeyR, detailing major architectural shifts, performance milestones, and the roadmap to automation excellence.</p>
+            </div>
+            <a href="https://github.com/kriswn/KeyR" target="_blank" class="header__github-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                View on GitHub
+            </a>
+        </header>
+
+        <!-- v0.1.0 Documentation -->
+        <section id="v10" class="doc-section fade-in">
+            <span class="doc-section__version">v0.1.0 Beta (Initial Release)</span>
+            <h2 class="doc-section__title">The First Version</h2>
+            <div class="doc-section__content">
+                <p>KeyR was created to be a simple tool that anyone can use to record and play back actions on their computer without needing to write code.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Macro Recording</span>
+                        <span class="feature-list__desc">Captures your mouse movements and keyboard keys exactly as you do them.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Secure Saving</span>
+                        <span class="feature-list__desc">Saves your macros in a special encrypted format to keep your workflows private.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Adjustable Speed</span>
+                        <span class="feature-list__desc">Allows you to speed up your macros by 10x or slow them down to see exactly what is happening.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Looping</span>
+                        <span class="feature-list__desc">You can set your macro to repeat a certain number of times or loop forever.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Global Hotkeys</span>
+                        <span class="feature-list__desc">Use F8 to record and F10 to play, even if the app is minimized.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">No Installation</span>
+                        <span class="feature-list__desc">A tiny app that you can run from anywhere without installing anything.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- v0.1.1 Documentation -->
+        <section id="v11" class="doc-section fade-in">
+            <span class="doc-section__version">v0.1.1 Beta (Stability & UX Refining)</span>
+            <h2 class="doc-section__title">Smoother Experience</h2>
+            <div class="doc-section__content">
+                <p>This update fixed common bugs and made the app much easier to use every day.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Quick Stop</span>
+                        <span class="feature-list__desc">Improved the 'Panic Stop' (F10) so it stops your macro instantly no matter how fast it's clicking.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Remembered Settings</span>
+                        <span class="feature-list__desc">The app now remembers where you left it on your screen so you don't have to move it every time.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Always on Top</span>
+                        <span class="feature-list__desc">Added a setting to keep KeyR visible over other windows while you work.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Saved Loop Counts</span>
+                        <span class="feature-list__desc">Your preferred loop settings are now saved automatically.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- v0.1.2 Documentation -->
+        <section id="v12" class="doc-section fade-in">
+            <span class="doc-section__version">v0.1.2 Beta (Performance Milestone)</span>
+            <h2 class="doc-section__title">Speed & Efficiency</h2>
+            <div class="doc-section__content">
+                <p>We optimized the internal engine to make it run faster and use less of your computer's power.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Smoother Playback</span>
+                        <span class="feature-list__desc">Optimized how the app talks to Windows to prevent any stuttering during playback.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Micro-Timing</span>
+                        <span class="feature-list__desc">Ensured that even the fastest clicks are perfectly timed down to the millisecond.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Lightweight App</span>
+                        <span class="feature-list__desc">Stripped out unnecessary code to keep the app size under 1MB.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">High Priority</span>
+                        <span class="feature-list__desc">The app now runs more reliably even if your PC is under heavy load.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- v0.2.0 Documentation -->
+        <section id="v20" class="doc-section fade-in">
+            <span class="doc-section__version">v0.2.0 Beta (The Smart Logic Update)</span>
+            <h2 class="doc-section__title">Smart Automations</h2>
+            <div class="doc-section__content">
+                <p>The app can now 'see' your screen and make decisions based on what is happening.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Auto-Restart</span>
+                        <span class="feature-list__desc">You can set the macro to restart itself if it sees a specific image or text on screen.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Screen Detection</span>
+                        <span class="feature-list__desc">Scans for images, colors, or specific text to trigger your macros.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Flexible Rules</span>
+                        <span class="feature-list__desc">Set rules so the macro only triggers when exactly what you want appears.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Logic Settings</span>
+                        <span class="feature-list__desc">Choose between repeating immediately or waiting for an image to disappear before starting again.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="v30" class="doc-section fade-in">
+            <span class="doc-section__version">v0.3.0 Beta (The UI Overhaul Update)</span>
+            <h2 class="doc-section__title">A Modern Look</h2>
+            <div class="doc-section__content">
+                <p>We completely redesigned the interface to make it look professional and easier to navigate.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Dark Mode</span>
+                        <span class="feature-list__desc">A new sleek, dark theme that is much easier on the eyes.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Settings Window</span>
+                        <span class="feature-list__desc">A dedicated window to manage all your preferences in one place.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Search Bar</span>
+                        <span class="feature-list__desc">Instantly find the setting you're looking for by typing a few letters.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Visual Toggles</span>
+                        <span class="feature-list__desc">Redesigned buttons and menus to be more intuitive and responsive.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="v31" class="doc-section fade-in">
+            <span class="doc-section__version">v0.3.1 Beta (QoL & Refinements)</span>
+            <h2 class="doc-section__title">Extra Polish</h2>
+            <div class="doc-section__content">
+                <p>Small but important changes to make the app feel more refined.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Import Tools</span>
+                        <span class="feature-list__desc">Added the ability to import macros from other popular tools like TinyTask.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Easier Navigation</span>
+                        <span class="feature-list__desc">Optimized how windows open and close for a smoother feel.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Cleaner Menus</span>
+                        <span class="feature-list__desc">Simplified the settings menu so only the options you need are visible.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="v32" class="doc-section fade-in">
+            <span class="doc-section__version">v0.3.2 Beta (Engine Overhaul)</span>
+            <h2 class="doc-section__title">Reliable Recording</h2>
+            <div class="doc-section__content">
+                <p>A major update to how the app records your actions, making it much more accurate.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Advanced Hooking</span>
+                        <span class="feature-list__desc">Uses a new method to capture every single click and keypress without missing a beat.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Full Key Support</span>
+                        <span class="feature-list__desc">Now records everything, including side mouse buttons and special keyboard keys.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Live Timer</span>
+                        <span class="feature-list__desc">Shows exactly how long your recording has been running right in the title bar.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Precise Timing</span>
+                        <span class="feature-list__desc">Rewrote the timing system to ensure 100% accuracy during playback.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+          <section id="v33" class="doc-section fade-in">
+            <span class="doc-section__version">v0.3.3 Beta (.NET Bootstrapper)</span>
+            <h2 class="doc-section__title">Safety Checks</h2>
+            <div class="doc-section__content">
+                <p>Added checks to make sure your computer is ready to run KeyR without crashing.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Startup Diagnostics</span>
+                        <span class="feature-list__desc">The app now checks if you have the right Windows updates before starting.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Friendly Errors</span>
+                        <span class="feature-list__desc">If something is missing, the app shows a clear message with exactly what you need to fix.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+          <section id="v34" class="doc-section fade-in">
+              <span class="doc-section__version">v0.3.4 (Centroid Mapping)</span>
+              <h2 class="doc-section__title">Import Improvements</h2>
+              <div class="doc-section__content">
+                  <p>Significant updates to how external macros are imported and used.</p>
+                  
+                  <div class="feature-list">
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">Auto-Centering</span>
+                          <span class="feature-list__desc">Imported macros now automatically center themselves on your screen so they don't click in the wrong spot.</span>
+                      </div>
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">Perfect Scaling</span>
+                          <span class="feature-list__desc">Ensured that macros recorded on different screen sizes still work perfectly on yours.</span>
+                      </div>
+                  </div>
+              </div>
+          </section>
+
+        <footer>
+            <p>&copy; 2026 KeyR. Built for Windows.</p>
+        </footer>
+    </div>
+
+    <!-- Mobile Sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar__links" style="overflow-y: hidden;">
+            <a href="index.html" class="sidebar__link" onclick="closeSidebar()" style="flex-shrink: 0;">Home</a>
+            <div class="sidebar__divider" style="flex-shrink: 0;"></div>
+            
+            <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none;">
+                <a href="#v34" class="sidebar__link" onclick="closeSidebar()">v0.3.4 (Centroid)</a>
+                  <a href="#v33" class="sidebar__link" onclick="closeSidebar()">v0.3.3 (Checks)</a>
+                <a href="#v32" class="sidebar__link" onclick="closeSidebar()">v0.3.2 (Engine)</a>
+                <a href="#v31" class="sidebar__link" onclick="closeSidebar()">v0.3.1 (QoL)</a>
+                <a href="#v30" class="sidebar__link" onclick="closeSidebar()">v0.3.0 (Aesthetics)</a>
+                <a href="#v20" class="sidebar__link" onclick="closeSidebar()">v0.2.0 (Smart)</a>
+                <a href="#v12" class="sidebar__link" onclick="closeSidebar()">v0.1.2 (Speed)</a>
+                <a href="#v11" class="sidebar__link" onclick="closeSidebar()">v0.1.1 (Fixes)</a>
+                <a href="#v10" class="sidebar__link" onclick="closeSidebar()">v0.1.0 (Launch)</a>
+            </div>
+
+            <div class="sidebar__divider" style="flex-shrink: 0;"></div>
+            <a href="versions.html" class="sidebar__link" onclick="closeSidebar()" style="flex-shrink: 0;">History</a>
+        </div>
+        <div class="sidebar__footer">
+            <button class="btn--auth btn--login" onclick="showDevModal()">Login</button>
+            <button class="btn--auth btn--register" onclick="showDevModal()">Register</button>
+        </div>
+    </div>
+
+    <!-- Development Modal -->
+    <div class="modal-overlay" id="devModal">
+        <div class="modal">
+            <span class="modal__icon">⚡</span>
+            <h3 class="modal__title">Work in Progress</h3>
+            <p class="modal__text">Accounts are still under development. We're working on bringing user accounts to KeyR soon!</p>
+            <button class="modal__btn" onclick="hideDevModal()">Understood</button>
+        </div>
+    </div>
+
+    <!-- OS Modal -->
+    <div class="modal-overlay" id="osModal">
+        <div class="modal">
+            <span class="modal__icon">🚫</span>
+            <h3 class="modal__title">Windows Only</h3>
+            <p class="modal__text">KeyR is currently only available for Windows PCs. Mobile devices and other operating systems are not supported.</p>
+            <button class="modal__btn" onclick="hideOSModal()">Understood</button>
+        </div>
+    </div>
+
+    <!-- Back to Top -->
+    <a href="#" class="back-to-top" id="backToTop" aria-label="Back to Top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </a>
+
+    <script>
+        const nav = document.querySelector('.nav');
+        let opaqueThreshold = null;
+        const backToTop = document.getElementById('backToTop');
+
+        let lastScrollY = window.scrollY;
+        function handleScroll() {
+            const currentScroll = window.scrollY;
+            if (window.innerWidth <= 1024) {
+                if (currentScroll > lastScrollY && currentScroll > 60) {
+                    nav.classList.add('nav--hidden');
+                    document.body.classList.add('nav-is-hidden');
+                } else if (currentScroll < lastScrollY) {
+                    nav.classList.remove('nav--hidden');
+                    document.body.classList.remove('nav-is-hidden');
+                }
+            } else {
+                nav.classList.remove('nav--hidden');
+                document.body.classList.remove('nav-is-hidden');
+            }
+            lastScrollY = currentScroll;
+
+            if (currentScroll > 400) { backToTop.classList.add('visible'); }
+            else { backToTop.classList.remove('visible'); }
+            
+            if (opaqueThreshold !== null) {
+                if (currentScroll >= opaqueThreshold) { nav.classList.add('nav--scrolled'); return; }
+                else { opaqueThreshold = null; }
+            }
+            
+            const rect = nav.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const points = [{ x: centerX, y: rect.top + 20 }, { x: centerX, y: rect.top + rect.height / 2 }];
+            let hasContent = false;
+            for (const p of points) {
+                const elements = document.elementsFromPoint(p.x, p.y);
+                for (const el of elements) {
+                    if (el === nav || nav.contains(el)) continue;
+                    const tag = el.tagName;
+                    const cl = el.classList;
+                    if (tag === 'HTML' || tag === 'BODY') continue;
+                    if (cl.contains('bg-glow') || cl.contains('page-wrapper')) continue;
+                    if (tag === 'NAV') continue;
+                    if (cl.contains('header') || cl.contains('doc-section') || cl.contains('feature-list') || cl.contains('tech-specs') || cl.contains('footer')) { hasContent = true; break; }
+                    if (tag === 'HEADER' || tag === 'SECTION' || tag === 'FOOTER' || tag === 'MAIN') { hasContent = true; break; }
+                }
+                if (hasContent) break;
+            }
+            if (hasContent) { opaqueThreshold = currentScroll; nav.classList.add('nav--scrolled'); }
+            else { nav.classList.remove('nav--scrolled'); }
+        }
+        let scrollTicking = false;
+        window.addEventListener('scroll', () => {
+            if (!scrollTicking) { window.requestAnimationFrame(() => { handleScroll(); scrollTicking = false; }); scrollTicking = true; }
+        }, { passive: true });
+        window.addEventListener('resize', () => {
+            opaqueThreshold = null; nav.classList.remove('nav--scrolled');
+            if (window.innerWidth > 1024 && typeof closeSidebar === 'function') {
+                const sb = document.getElementById('sidebar');
+                if (sb && sb.classList.contains('sidebar--open')) closeSidebar();
+            }
+            handleScroll();
+        });
+
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        function openSidebar() { sidebar.classList.add('sidebar--open'); sidebarOverlay.classList.add('sidebar-overlay--active'); document.body.style.overflow = 'hidden'; hamburgerBtn.classList.add('hamburger--active'); }
+        function closeSidebar() { sidebar.classList.remove('sidebar--open'); sidebarOverlay.classList.remove('sidebar-overlay--active'); document.body.style.overflow = ''; hamburgerBtn.classList.remove('hamburger--active'); }
+        hamburgerBtn.addEventListener('click', () => { if (sidebar.classList.contains('sidebar--open')) closeSidebar(); else openSidebar(); });
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideDevModal(); if (typeof hideOSModal === 'function') hideOSModal(); closeSidebar(); } });
+
+        const devModal = document.getElementById('devModal');
+        function showDevModal() { devModal.classList.add('modal-overlay--active'); }
+        function hideDevModal() { devModal.classList.remove('modal-overlay--active'); }
+        const osModal = document.getElementById('osModal');
+        function showOSModal() { if (osModal) osModal.classList.add('modal-overlay--active'); }
+        function hideOSModal() { if (osModal) osModal.classList.remove('modal-overlay--active'); }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        const navScrollArea = document.getElementById('navScrollArea');
+        if (navScrollArea) {
+            navScrollArea.addEventListener('wheel', (e) => { if (e.deltaY !== 0) { e.preventDefault(); navScrollArea.scrollLeft += e.deltaY; } }, { passive: false });
+        }
+    </script>
+</body>
+</html>
+
+
