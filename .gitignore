@@ -4,3 +4,9 @@ obj/
 *.user
 *.suo
 *.pdb
+
+website/
+Create-Release.bat
+FixWebsite.py
+*.py
+
