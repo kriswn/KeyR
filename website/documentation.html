@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="darkreader-lock">
+    <title>Documentation — KeyR</title>
+    <link rel="icon" type="image/png" href="appIcon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #08080c;
+            --bg-secondary: #0e0e14;
+            --bg-card: #131319;
+            --bg-card-hover: #1a1a22;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(255, 255, 255, 0.1);
+            --text-primary: #eaeaf0;
+            --text-secondary: #8e8ea0;
+            --text-muted: #5a5a6e;
+            --accent: #d4943a;
+            --accent-glow: rgba(212, 148, 58, 0.25);
+            --accent-subtle: rgba(212, 148, 58, 0.08);
+            --accent-secondary: #7c6cc8;
+            --accent-blue: #5a8ed4;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.025;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 200px;
+        }
+
+        .bg-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.06;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .bg-glow--teal {
+            width: 500px; height: 500px;
+            background: var(--accent);
+            top: -150px; right: 10%;
+            animation: drift 25s ease-in-out infinite;
+        }
+        .bg-glow--blue {
+            width: 400px; height: 400px;
+            background: var(--accent-secondary);
+            bottom: -100px; left: 5%;
+            animation: drift 30s ease-in-out infinite reverse;
+        }
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -15px); }
+        }
+
+        .section {
+            padding: 80px 0;
+            position: relative;
+            content-visibility: auto;
+            contain-intrinsic-size: 1px 800px;
+        }
+        
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ── Navigation ── */
+        .nav {
+            display: grid;
+            grid-template-columns: 1fr minmax(0, auto) 1fr;
+            align-items: center;
+            padding: 0;
+            margin: 16px 0 32px;
+            gap: 24px;
+            position: sticky;
+            top: 16px;
+            z-index: 100;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(0);
+            pointer-events: none;
+            will-change: transform;
+        }
+        .nav--scrolled { transform: translateY(-4px); }
+        .nav__brand, .nav__links, .nav__actions {
+            pointer-events: auto;
+            transition: all 0.4s ease;
+            background: rgba(8, 8, 12, 0);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            border: 1px solid transparent;
+            will-change: background, backdrop-filter, border, box-shadow;
+        }
+        .nav--scrolled .nav__brand,
+        .nav--scrolled .nav__links,
+        .nav--scrolled .nav__actions {
+            background: rgba(8, 8, 12, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .nav__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            justify-self: start;
+            padding: 8px 20px;
+            border-radius: 100px;
+        }
+        .nav__logo {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: var(--bg-card);
+        }
+        .nav__title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+        .nav__title span { color: var(--accent); }
+        .nav__links {
+            display: flex;
+            align-items: center;
+            justify-self: center;
+            padding: 8px 12px;
+            border-radius: 100px;
+            max-width: 100%;
+            min-width: 0;
+            gap: 0;
+        }
+        .nav__scroll-area {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 0 4px;
+        }
+        .nav__scroll-area::-webkit-scrollbar { display: none; }
+        .nav__divider {
+            width: 1px; height: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 0 6px;
+            flex-shrink: 0;
+        }
+        .nav__links a {
+            flex-shrink: 0;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 14px;
+            padding: 6px 14px;
+            border-radius: 100px;
+            transition: all 0.2s ease;
+        }
+        .nav__links a:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
+        
+        .nav__actions {
+            display: flex;
+            align-items: center;
+            justify-self: end;
+            padding: 8px 12px;
+            border-radius: 100px;
+        }
+
+        /* ── Auth Buttons ── */
+        .auth-group { display: flex; gap: 8px; align-items: center; }
+        .btn--auth {
+            padding: 7px 18px; border-radius: 100px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.25s ease; text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn--login { color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.08); background: transparent; }
+        .btn--login:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.04); border-color: rgba(255,255,255,0.12); }
+        .btn--register { background: var(--accent); color: #0a0a0f; border: 1px solid var(--accent); font-weight: 700; }
+        .btn--register:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        /* ── Hamburger ── */
+        .hamburger {
+            display: none; flex-direction: column; gap: 5px; cursor: pointer;
+            padding: 10px; z-index: 1001; background: transparent; border: none;
+        }
+        .hamburger span {
+            display: block; width: 22px; height: 2px; background: var(--text-primary);
+            border-radius: 2px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; top: 0; right: -100%; width: 300px;
+            height: 100vh; height: 100dvh; background: transparent;
+            z-index: 1000; padding: 20px; display: flex; flex-direction: column;
+            gap: 12px; transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none;
+        }
+        .sidebar--open { right: 0; }
+        .sidebar__links, .sidebar__footer {
+            pointer-events: auto;
+            background: rgba(8, 8, 12, 0.85);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border-radius: 20px; padding: 16px;
+        }
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+            z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .sidebar-overlay--active { opacity: 1; pointer-events: auto; }
+        .sidebar__links {
+            display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+            overflow-y: auto; width: 100%; scrollbar-width: none; min-height: 0; flex-shrink: 1;
+        }
+        .sidebar__links::-webkit-scrollbar { display: none; }
+        .sidebar__divider { width: 100%; height: 1px; background: rgba(255,255,255,0.06); margin: 4px 0; flex-shrink: 0; }
+        .sidebar__link {
+            font-size: 16px; font-weight: 500; color: var(--text-secondary); text-decoration: none;
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: flex-start;
+            gap: 10px; padding: 10px 14px; border-radius: 12px; width: 100%; box-sizing: border-box;
+        }
+        .sidebar__link:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); }
+        .sidebar__footer { display: flex; flex-direction: row; gap: 8px; }
+        .sidebar__footer .btn--auth { flex: 1; padding: 10px 0; justify-content: center; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            z-index: 2000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay--active { opacity: 1; pointer-events: auto; }
+        .modal {
+            background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; padding: 40px; max-width: 380px; width: 90%;
+            text-align: center; transform: scale(0.92);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+        }
+        .modal-overlay--active .modal { transform: scale(1); }
+        .modal__icon { font-size: 40px; margin-bottom: 16px; display: block; }
+        .modal__title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 10px; color: white; }
+        .modal__text { color: var(--text-secondary); margin-bottom: 28px; font-size: 14px; line-height: 1.6; }
+        .modal__btn {
+            background: var(--accent); color: #0a0a0f; border: none; padding: 11px 28px;
+            border-radius: 100px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.25s;
+        }
+        .modal__btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        /* ── Back to Top ── */
+        .back-to-top {
+            position: fixed; bottom: 28px; right: 28px; width: 44px; height: 44px;
+            border-radius: 50%; background: rgba(8, 8, 12, 0.8);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 90; opacity: 0; visibility: hidden; transform: translateY(16px) translateZ(0);
+            will-change: transform, opacity; transition: all 0.3s ease; text-decoration: none;
+        }
+        .back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0) translateZ(0); }
+        .back-to-top:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); transform: translateY(-3px); }
+
+        /* ── Content Styles ── */
+        .header { padding: 80px 0 40px; text-align: left; }
+        .header__title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 44px; font-weight: 700; letter-spacing: -1.5px; margin-bottom: 16px;
+        }
+        .header__desc { font-size: 17px; color: var(--text-secondary); max-width: 640px; line-height: 1.7; }
+
+        .doc-section { margin-bottom: 80px; }
+        .doc-section__version {
+            display: inline-block; padding: 4px 12px;
+            background: var(--accent-subtle); color: var(--accent);
+            border-radius: 6px; font-size: 13px; font-weight: 700; margin-bottom: 14px;
+        }
+        .doc-section__title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px;
+        }
+        .doc-section__content { color: var(--text-secondary); }
+        .doc-section__content p { margin-bottom: 18px; font-size: 15px; line-height: 1.7; }
+        
+        .feature-list { margin: 28px 0; border-left: 2px solid rgba(255,255,255,0.06); padding-left: 24px; }
+        .feature-list__item { margin-bottom: 22px; list-style: none; }
+        .feature-list__name { font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 4px; font-size: 15px; }
+        .feature-list__desc { font-size: 14px; line-height: 1.7; }
+        .feature-list__sub { padding-left: 16px; border-left: 1px solid rgba(255,255,255,0.05); margin: 10px 0 10px 4px; font-size: 13px; line-height: 1.7; }
+
+        .tech-specs {
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-lg); padding: 28px; margin-top: 32px;
+        }
+        .tech-specs__title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--accent-blue); }
+        .tech-specs__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .tech-tag { display: block; }
+        .tech-tag__label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+        .tech-tag__value { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+
+        footer { border-top: 1px solid rgba(255,255,255,0.04); padding: 40px 0; margin-top: 60px; text-align: center; color: var(--text-muted); font-size: 12px; }
+        
+        .accent { color: var(--accent); }
+        .accent-gradient {
+            background: linear-gradient(135deg, #d4943a 0%, #7c6cc8 50%, #c44040 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; color: transparent; display: inline-block; font-weight: 900;
+        }
+        .highlight { color: var(--text-primary); font-weight: 600; }
+
+        .fade-in { opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); will-change: opacity, transform; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 1024px) {
+            .section { padding: 50px 0; }
+            .nav {
+                padding: 0; grid-template-columns: 1fr auto !important;
+                position: fixed !important; top: auto !important; bottom: 20px !important;
+                left: 20px !important; right: 20px !important; transform: translateZ(0) !important;
+                width: auto; margin: 0 !important; z-index: 1000;
+            }
+            .nav__brand, .nav__actions {
+                background: rgba(8, 8, 12, 0.8) !important;
+                backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+            }
+            .nav__links { display: none !important; }
+            .auth-group { display: none !important; }
+            .hamburger { display: flex !important; }
+            .nav { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+            .nav.nav--hidden { transform: translateY(150%) !important; }
+            .nav__actions {
+                grid-column: 2; justify-self: end; padding: 10px 12px !important;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+            }
+            .nav__actions:hover {
+                background: rgba(255, 255, 255, 0.06) !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            .sidebar { flex-direction: column-reverse; justify-content: flex-start; padding-top: 20px; padding-bottom: 90px; }
+            .back-to-top { bottom: 90px; right: 24px; }
+            body.nav-is-hidden .back-to-top { bottom: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow bg-glow--teal"></div>
+    <div class="bg-glow bg-glow--blue"></div>
+
+    <div class="page-wrapper">
+        <nav class="nav">
+            <a href="index.html" class="nav__brand">
+                <img src="appIcon.png" alt="KeyR Logo" class="nav__logo">
+                <span class="nav__title">Key<span>R</span></span>
+            </a>
+            
+            <div class="nav__links">
+                <a href="index.html">Home</a>
+                <div class="nav__divider"></div>
+                <div class="nav__scroll-area" id="navScrollArea">
+                    <a href="#v33">v0.3.3</a>
+                    <a href="#v32">v0.3.2</a>
+                    <a href="#v31">v0.3.1</a>
+                    <a href="#v30">v0.3.0</a>
+                    <a href="#v20">v0.2.0</a>
+                    <a href="#v12">v0.1.2</a>
+                    <a href="#v11">v0.1.1</a>
+                    <a href="#v10">v0.1.0</a>
+                </div>
+                <div class="nav__divider"></div>
+                <a href="versions.html">History</a>
+            </div>
+
+            <div class="nav__actions">
+                <div class="auth-group">
+                    <button class="btn--auth btn--login" onclick="showDevModal()">Login</button>
+                    <button class="btn--auth btn--register" onclick="showDevModal()">Register</button>
+                </div>
+                <button class="hamburger" id="hamburgerBtn" aria-label="Toggle Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="header fade-in">
+            <h1 class="header__title">Project <span style="color: white;">Documentation</span></h1>
+            <p class="header__desc">A comprehensive guide to the evolution of KeyR, detailing major architectural shifts, performance milestones, and the roadmap to automation excellence.</p>
+        </header>
+
+        <!-- v0.1.0 Documentation -->
+        <section id="v10" class="doc-section fade-in">
+            <span class="doc-section__version">v0.1.0 Beta (Initial Release)</span>
+            <h2 class="doc-section__title">The Foundation</h2>
+            <div class="doc-section__content">
+                <p>Version 1.0 established the core KeyR philosophy: a lightweight, scripting-free automation tool that anyone can use. The goal was to eliminate the steep learning curve of traditional macro tools by providing a "Record and Play" experience that just works. It introduced the proprietary <span class="highlight">.tt2 encrypted macro format</span> to protect user privacy and workflow integrity.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Unified Macro Engine</span>
+                        <span class="feature-list__desc">The heart of KeyR. It captures raw mouse coordinates and virtual keyboard scan codes into a single, high-fidelity timeline. Unlike other recorders that only capture clicks, KeyR records the spatial movement and timing of every interaction, ensuring 1:1 playback precision.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Secure (.tt2) Encryption</span>
+                        <span class="feature-list__desc">All macros are saved in a proprietary binary format protected by AES-128 encryption. This ensures that your automated workflows—which might contain sensitive login steps or private data—cannot be read or modified by text editors or unauthorized users.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Variable Replay Speed (0.1x – 10x)</span>
+                        <span class="feature-list__desc">A dynamic timing engine that allows users to warp time. By decoupling the captured timing from the playback clock, you can slow down complex tasks to 10% speed for debugging, or speed up repetitive data entry by up to 1000% without losing input accuracy.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Infinite & Counted Looping</span>
+                        <span class="feature-list__desc">Built-in support for automation loops. You can specify a exact number of times for the macro to run, or enable "Continuous Mode" for tasks that need to run indefinitely until manually stopped.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Global System Hotkeys</span>
+                        <span class="feature-list__desc">System-wide hooks for recording and playback control. By using F8 (Record/Stop) and F10 (Play/Panic Stop), you can control KeyR even when it is minimized in the system tray or when you are focused on another application.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">UI Persistence & Layout Settings</span>
+                        <span class="feature-list__desc">The application remembers your workspace. It automatically saves the "Always-on-Top" state and your exact window coordinates, so the controller is always exactly where you left it upon the next launch.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Zero-Install Portability</span>
+                        <span class="feature-list__desc">A standalone executable (~600KB) that requires no installation, registry changes, or external dependencies (other than .NET). It is designed to be carried on a USB drive and used across any Windows machine.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- v0.1.1 Documentation -->
+        <section id="v11" class="doc-section fade-in">
+            <span class="doc-section__version">v0.1.1 Beta (Stability & UX Refining)</span>
+            <h2 class="doc-section__title">Stability & UX Refining</h2>
+            <div class="doc-section__content">
+                <p>The 1.1 update focused on the "Quality of Life" improvements requested by early adopters. It addressed critical edge cases in loop logic and introduced the first phase of workspace persistence to ensure a professional, reliable environment for long-running automations.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Interruptible Loop Architecture</span>
+                        <span class="feature-list__desc">Engineered a more responsive cancellation token system that allows users to halt active playback immediately. By decoupling the input stream from the main lifecycle, the "Panic Stop" (F10) now works instantly even during high-frequency mouse clicks.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Workspace Intelligence Cache</span>
+                        <span class="feature-list__desc">Implemented automatic coordinate and preference caching for the main window. The application now remembers its exact last known position on the user's desktop, restoring it upon relaunch to maintain a consistent multi-monitor workspace.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Adaptive Always-on-Top View</span>
+                        <span class="feature-list__desc">Added a dedicated toggle to keep the macro controller visible over other applications. This is essential for monitoring macro progress while playing full-screen games or using professional software that usually hides background windows.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Persistent Loop Configuration</span>
+                        <span class="feature-list__desc">The desired loop count is now saved into the local settings JSON. This prevents users from having to re-enter their complex repetition patterns every time the application is closed or updated.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- v0.1.2 Documentation -->
+        <section id="v12" class="doc-section fade-in">
+            <span class="doc-section__version">v0.1.2 Beta (Performance Milestone)</span>
+            <h2 class="doc-section__title">Low-Level Optimization</h2>
+            <div class="doc-section__content">
+                <p>Version 1.2 represents a fundamental shift from feature expansion to <span class="highlight">low-level hardware optimization</span>. The primary objective was to minimize the application's runtime footprint while maximizing timing precision for high-speed macro replay.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Allocation-Free Playback Loop</span>
+                        <span class="feature-list__desc">By caching native Win32 input structures and avoiding repeated memory allocations during the playback loop, v0.1.2 virtually eliminates Garbage Collection pauses during critical macro execution. This results in stutter-free playback.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Micro-Precision Clocking</span>
+                        <span class="feature-list__desc">Transitioned to a tighter spin-wait mechanism (10-cycle accuracy) for micro-second level delay precision. This ensures that even the fastest rapid-fire macros are replayed with exactly the same timing as the original recording.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Binary Trimming & Stripping</span>
+                        <span class="feature-list__desc">Leveraged advanced IL stripping and dead-code elimination to reduce the executable size to its most essential components (~600KB). This ensures nearly instantaneous application startup and minimal RAM usage.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Optimized Thread Scheduling</span>
+                        <span class="feature-list__desc">Macros now run on high-priority threads to prevent Windows from deprioritizing the playback during CPU-intensive tasks, ensuring your automation remains consistent even when the PC is under heavy load.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- v0.2.0 Documentation -->
+        <section id="v20" class="doc-section fade-in">
+            <span class="doc-section__version">v0.2.0 Beta (The Smart Logic Update)</span>
+            <h2 class="doc-section__title">Intelligent Automation</h2>
+            <div class="doc-section__content">
+                <p>Version 2.0 transforms KeyR from a simple "playback robot" into an intelligent "decision-making assistant." By introducing a background environmental scan engine, KeyR can now interact with the visible state of your computer in real-time. This allows for complex workflows that wait for specific events before proceeding.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Smart Auto-Restart Engine</span>
+                        <span class="feature-list__desc">A parallel background thread that monitors screen conditions while the macro is running. If your specified conditions are met, the engine can instantly "Rewind" the macro back to loop 1, creating a truly reactive automation loop that responds to external triggers.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">On-Screen Condition Detection</span>
+                        <div class="feature-list__desc">Set up multiple triggers based on what is happening on your monitor in real-time:
+                            <div class="feature-list__sub">
+                                <span class="highlight">Image Detection:</span> Scans a specific region (or full screen) for a reference image with adjustable color tolerance and pixel-perfect comparison.
+                            </div>
+                            <div class="feature-list__sub">
+                                <span class="highlight">Text Detection (OCR):</span> Uses advanced native Windows Character Recognition to "read" text inside hidden and active windows to trigger macro restarts.
+                            </div>
+                            <div class="feature-list__sub">
+                                <span class="highlight">Time Intervals:</span> Intelligent timers designed to ensure periodic restarts or status checks regardless of what is happening on screen.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Match Logic: ANY vs ALL</span>
+                        <span class="feature-list__desc">Sophisticated boolean evaluation for complex tasks. Choose "Match ANY" to restart if any one of your conditions becomes true, or "Match ALL" to ensure a multi-step prerequisite is met before the macro triggers.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Logic Toggles: Repetitive vs Sequential</span>
+                        <div class="feature-list__desc">
+                            <div class="feature-list__sub">
+                                <span class="highlight">Repetitive (Pulse):</span> The macro restarts immediately and repeatedly as long as the condition is visible. Perfect for rapid-fire "spam" loops.
+                            </div>
+                            <div class="feature-list__sub">
+                                <span class="highlight">Sequential (Smart):</span> The macro restarts once, then waits for the condition to <b>disappear</b> before allowing another restart. This prevents accidental multi-restarts on static images.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Adjustable Polling Interval</span>
+                        <span class="feature-list__desc">Full control over performance. You can set the engine to scan the screen every 100ms for high-speed reactions, or set it to a longer interval to save CPU resources during long-term background monitoring tasks.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Single Instance Hardware Lock</span>
+                        <span class="feature-list__desc">To prevent input conflicts and system instability, KeyR v0.2.0 includes a system-level mutex lock that ensures only one instance of the application can run at a time.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="v30" class="doc-section fade-in">
+            <span class="doc-section__version">v0.3.0 Beta (The UI Overhaul Update)</span>
+            <h2 class="doc-section__title">Settings & Theme Engine Overhaul</h2>
+            <div class="doc-section__content">
+                <p>Version 3.0 represents a massive step forward for the application's configuration user experience. The update introduces a brand new, dedicated Settings Window, complete with robust flat-color themes and highly responsive interface components designed to make tuning your automation as intuitive as possible.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Modern Flat Themes</span>
+                        <span class="feature-list__desc">The underlying Theme Engine was fundamentally rebuilt. Legacy UI gradients were entirely stripped out and replaced with deep, solid color palettes, producing a significantly sharper, more premium Dark Mode aesthetic.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Centralized Settings Window</span>
+                        <span class="feature-list__desc">A brand new window instance dedicated solely to configuring KeyR. It cleanly isolates preferences from the main launcher interface and provides ample room for advanced controls, import/export capabilities, and accessibility toggles.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Real-Time Search Bar</span>
+                        <span class="feature-list__desc">Users can now instantly filter down the extensive settings list. The robust new search bar instantly narrows down the UI layout to the specific toggles or inputs matching the query, making configuration nearly instantaneous.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Redesigned Setting Tiles</span>
+                        <span class="feature-list__desc">Configuration cards and inputs were graphically reimagined. For example, the Quick-Move utility was completely visually overhauled into an elegant, interactive 3x3 directional tile layout, making screen-snapping much more user-friendly.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Quality-of-Life Tooltips</span>
+                        <span class="feature-list__desc">Reinvented the helper tooltips to be highly accessible and dynamic. Tooltips now react in real-time to button clicks (e.g., dynamically swapping from "Always On Top is Off" to "Always On Top is On" the moment it is toggled) without requiring a mouse re-hover.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Bug Fixes & Polish</span>
+                        <span class="feature-list__desc">Crushed several persistent visual and layout bugs, most notably a critical fix for the search bar cursor that was rendering entirely invisible when users activated the pitch-black Dark Mode theme.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="v31" class="doc-section fade-in">
+            <span class="doc-section__version">v0.3.1 Beta (QoL & Refinements)</span>
+            <h2 class="doc-section__title">Settings Polishing</h2>
+            <div class="doc-section__content">
+                <p>Version 3.1 introduces targeted quality-of-life improvements to streamline user interaction with Settings and Smart Automations.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Foreign Macro Conversion</span>
+                        <span class="feature-list__desc">New advanced system allowing other macro files (InformaalTask and TinyTask) to be parsed, imported, and directly converted into KeyR's encrypted JSON framework (.tt2) effortlessly. Find the tools in Settings under "Advanced".</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Settings Window Toggling</span>
+                        <span class="feature-list__desc">Clicking the Settings button now properly toggles the window (closing it if already open), improving navigation fluidity.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Theme Dropdown Evolution</span>
+                        <span class="feature-list__desc">The dark theme checkbox was upgraded into a distinct, dropdown component to unify styling with other dropdowns, like Condition Types.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Contextual UI Logic</span>
+                        <span class="feature-list__desc">The 'Restricted' toggle is now context-aware, making it visible only when Sequential Restart Logic is active, completely decluttering the settings menu.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="v32" class="doc-section fade-in">
+            <span class="doc-section__version">v0.3.2 Beta (Engine Overhaul)</span>
+            <h2 class="doc-section__title">Native Input Engine &amp; Recording Timer</h2>
+            <div class="doc-section__content">
+                <p>Version 3.2 represents the most significant backend overhaul in KeyR's history. The entire recording subsystem was rebuilt from the ground up using native Win32 low-level hooks, replacing the third-party MouseKeyHook library for input capture. This eliminates an entire class of missed-input bugs and enables capture of previously invisible actions like <span class="highlight">XButton1/XButton2 mouse buttons</span>, <span class="highlight">horizontal scroll wheels</span>, and <span class="highlight">extended keyboard keys</span> (arrows, navigation cluster, numpad enter).</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Native Win32 Recording Hooks</span>
+                        <span class="feature-list__desc">Recording now uses WH_MOUSE_LL and WH_KEYBOARD_LL hooks installed directly via SetWindowsHookEx, bypassing the managed MouseKeyHook wrapper. This captures every raw input message at the OS level before any application processes it, ensuring zero missed events even during rapid-fire input sequences.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Complete Input Coverage</span>
+                        <div class="feature-list__desc">The new hook callbacks process the full spectrum of Windows input messages:
+                            <div class="feature-list__sub">
+                                <span class="highlight">Mouse:</span> WM_MOUSEMOVE, WM_LBUTTONDOWN/UP, WM_RBUTTONDOWN/UP, WM_MBUTTONDOWN/UP, WM_XBUTTONDOWN/UP, WM_MOUSEWHEEL, WM_MOUSEHWHEEL
+                            </div>
+                            <div class="feature-list__sub">
+                                <span class="highlight">Keyboard:</span> WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP — with LLKHF_EXTENDED flag preservation for arrow keys, navigation keys, and numpad enter.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Live Recording Timer</span>
+                        <span class="feature-list__desc">A new DispatcherTimer displays elapsed recording time in the title bar in real-time (MM:SS format), mirroring the countdown timer shown during playback. This gives users immediate visual feedback on how long their recording has been running without needing to check an external clock.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">3-Tier Precision Playback Timing</span>
+                        <div class="feature-list__desc">The playback delay engine was redesigned with a tiered strategy for optimal CPU usage and timing accuracy:
+                            <div class="feature-list__sub">
+                                <span class="highlight">Tier 1 (>15ms):</span> Thread.Sleep(1) — yields the CPU completely, ideal for long delays between actions.
+                            </div>
+                            <div class="feature-list__sub">
+                                <span class="highlight">Tier 2 (2–15ms):</span> Thread.Sleep(0) — yields to same-priority threads only, keeping the thread warm.
+                            </div>
+                            <div class="feature-list__sub">
+                                <span class="highlight">Tier 3 (<2ms):</span> Thread.SpinWait(10) — active spin for sub-millisecond precision, ensuring zero-drift playback for rapid macro sequences.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Extended Key Flag Preservation</span>
+                        <span class="feature-list__desc">The raw KBDLLHOOKSTRUCT.flags field is now captured and stored in each MacroEvent. During playback, this flag is combined with a known-extended-key lookup table to ensure correct KEYEVENTF_EXTENDEDKEY behavior, fixing issues where arrow keys, Delete, Home/End, or numpad Enter would replay as incorrect keycodes.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Backward Compatibility</span>
+                        <span class="feature-list__desc">The new MacroEvent schema is a strict superset of the previous format. Old .tt2 macro files from any prior version load and play back correctly without conversion — new fields like IsExtendedKey and ScrollDelta are safely zero-initialized when absent from older recordings.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="v33" class="doc-section fade-in">
+            <span class="doc-section__version">v0.3.3 Beta (.NET Bootstrapper)</span>
+            <h2 class="doc-section__title">Dependency Checks</h2>
+            <div class="doc-section__content">
+                <p>Version 3.3 introduces an intelligent startup bootstrapper designed to dramatically improve the onboarding experience for new users.</p>
+                
+                <div class="feature-list">
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Smart First-Boot Diagnostics</span>
+                        <span class="feature-list__desc">Since KeyR relies on the .NET 9 Desktop Runtime, older versions would fail silently or show generic Windows error dialogs if the runtime wasn't installed. The app now natively hooks into the startup sequence to probe for required assemblies (like System.Drawing.Common) before trying to initialize the UI.</span>
+                    </div>
+                    <div class="feature-list__item">
+                        <span class="feature-list__name">Themed Information Dialogs</span>
+                        <span class="feature-list__desc">Designed a completely new custom `ThemedInfoBox` component to handle OS messages, warnings, and dependency checks elegantly, abandoning rigid Windows MessageBox forms in favor of fully custom styling.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 KeyR. Built for Windows.</p>
+        </footer>
+    </div>
+
+    <!-- Mobile Sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar__links" style="overflow-y: hidden;">
+            <a href="index.html" class="sidebar__link" onclick="closeSidebar()" style="flex-shrink: 0;">Home</a>
+            <div class="sidebar__divider" style="flex-shrink: 0;"></div>
+            
+            <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none;">
+                <a href="#v33" class="sidebar__link" onclick="closeSidebar()">v0.3.3 (Checks)</a>
+                <a href="#v32" class="sidebar__link" onclick="closeSidebar()">v0.3.2 (Engine)</a>
+                <a href="#v31" class="sidebar__link" onclick="closeSidebar()">v0.3.1 (QoL)</a>
+                <a href="#v30" class="sidebar__link" onclick="closeSidebar()">v0.3.0 (Aesthetics)</a>
+                <a href="#v20" class="sidebar__link" onclick="closeSidebar()">v0.2.0 (Smart)</a>
+                <a href="#v12" class="sidebar__link" onclick="closeSidebar()">v0.1.2 (Speed)</a>
+                <a href="#v11" class="sidebar__link" onclick="closeSidebar()">v0.1.1 (Fixes)</a>
+                <a href="#v10" class="sidebar__link" onclick="closeSidebar()">v0.1.0 (Launch)</a>
+            </div>
+
+            <div class="sidebar__divider" style="flex-shrink: 0;"></div>
+            <a href="versions.html" class="sidebar__link" onclick="closeSidebar()" style="flex-shrink: 0;">History</a>
+        </div>
+        <div class="sidebar__footer">
+            <button class="btn--auth btn--login" onclick="showDevModal()">Login</button>
+            <button class="btn--auth btn--register" onclick="showDevModal()">Register</button>
+        </div>
+    </div>
+
+    <!-- Development Modal -->
+    <div class="modal-overlay" id="devModal">
+        <div class="modal">
+            <span class="modal__icon">⚡</span>
+            <h3 class="modal__title">Work in Progress</h3>
+            <p class="modal__text">Accounts are still under development. We're working on bringing user accounts to KeyR soon!</p>
+            <button class="modal__btn" onclick="hideDevModal()">Understood</button>
+        </div>
+    </div>
+
+    <!-- OS Modal -->
+    <div class="modal-overlay" id="osModal">
+        <div class="modal">
+            <span class="modal__icon">🚫</span>
+            <h3 class="modal__title">Windows Only</h3>
+            <p class="modal__text">KeyR is currently only available for Windows PCs. Mobile devices and other operating systems are not supported.</p>
+            <button class="modal__btn" onclick="hideOSModal()">Understood</button>
+        </div>
+    </div>
+
+    <!-- Back to Top -->
+    <a href="#" class="back-to-top" id="backToTop" aria-label="Back to Top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </a>
+
+    <script>
+        const nav = document.querySelector('.nav');
+        let opaqueThreshold = null;
+        const backToTop = document.getElementById('backToTop');
+
+        let lastScrollY = window.scrollY;
+        function handleScroll() {
+            const currentScroll = window.scrollY;
+            if (window.innerWidth <= 1024) {
+                if (currentScroll > lastScrollY && currentScroll > 60) {
+                    nav.classList.add('nav--hidden');
+                    document.body.classList.add('nav-is-hidden');
+                } else if (currentScroll < lastScrollY) {
+                    nav.classList.remove('nav--hidden');
+                    document.body.classList.remove('nav-is-hidden');
+                }
+            } else {
+                nav.classList.remove('nav--hidden');
+                document.body.classList.remove('nav-is-hidden');
+            }
+            lastScrollY = currentScroll;
+
+            if (currentScroll > 400) { backToTop.classList.add('visible'); }
+            else { backToTop.classList.remove('visible'); }
+            
+            if (opaqueThreshold !== null) {
+                if (currentScroll >= opaqueThreshold) { nav.classList.add('nav--scrolled'); return; }
+                else { opaqueThreshold = null; }
+            }
+            
+            const rect = nav.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const points = [{ x: centerX, y: rect.top + 20 }, { x: centerX, y: rect.top + rect.height / 2 }];
+            let hasContent = false;
+            for (const p of points) {
+                const elements = document.elementsFromPoint(p.x, p.y);
+                for (const el of elements) {
+                    if (el === nav || nav.contains(el)) continue;
+                    const tag = el.tagName;
+                    const cl = el.classList;
+                    if (tag === 'HTML' || tag === 'BODY') continue;
+                    if (cl.contains('bg-glow') || cl.contains('page-wrapper')) continue;
+                    if (tag === 'NAV') continue;
+                    if (cl.contains('header') || cl.contains('doc-section') || cl.contains('feature-list') || cl.contains('tech-specs') || cl.contains('footer')) { hasContent = true; break; }
+                    if (tag === 'HEADER' || tag === 'SECTION' || tag === 'FOOTER' || tag === 'MAIN') { hasContent = true; break; }
+                }
+                if (hasContent) break;
+            }
+            if (hasContent) { opaqueThreshold = currentScroll; nav.classList.add('nav--scrolled'); }
+            else { nav.classList.remove('nav--scrolled'); }
+        }
+        let scrollTicking = false;
+        window.addEventListener('scroll', () => {
+            if (!scrollTicking) { window.requestAnimationFrame(() => { handleScroll(); scrollTicking = false; }); scrollTicking = true; }
+        }, { passive: true });
+        window.addEventListener('resize', () => {
+            opaqueThreshold = null; nav.classList.remove('nav--scrolled');
+            if (window.innerWidth > 1024 && typeof closeSidebar === 'function') {
+                const sb = document.getElementById('sidebar');
+                if (sb && sb.classList.contains('sidebar--open')) closeSidebar();
+            }
+            handleScroll();
+        });
+
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        function openSidebar() { sidebar.classList.add('sidebar--open'); sidebarOverlay.classList.add('sidebar-overlay--active'); document.body.style.overflow = 'hidden'; hamburgerBtn.classList.add('hamburger--active'); }
+        function closeSidebar() { sidebar.classList.remove('sidebar--open'); sidebarOverlay.classList.remove('sidebar-overlay--active'); document.body.style.overflow = ''; hamburgerBtn.classList.remove('hamburger--active'); }
+        hamburgerBtn.addEventListener('click', () => { if (sidebar.classList.contains('sidebar--open')) closeSidebar(); else openSidebar(); });
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideDevModal(); if (typeof hideOSModal === 'function') hideOSModal(); closeSidebar(); } });
+
+        const devModal = document.getElementById('devModal');
+        function showDevModal() { devModal.classList.add('modal-overlay--active'); }
+        function hideDevModal() { devModal.classList.remove('modal-overlay--active'); }
+        const osModal = document.getElementById('osModal');
+        function showOSModal() { if (osModal) osModal.classList.add('modal-overlay--active'); }
+        function hideOSModal() { if (osModal) osModal.classList.remove('modal-overlay--active'); }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        const navScrollArea = document.getElementById('navScrollArea');
+        if (navScrollArea) {
+            navScrollArea.addEventListener('wheel', (e) => { if (e.deltaY !== 0) { e.preventDefault(); navScrollArea.scrollLeft += e.deltaY; } }, { passive: false });
+        }
+    </script>
+</body>
+</html>
+
