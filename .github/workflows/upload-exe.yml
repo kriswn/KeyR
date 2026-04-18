@@ -1,0 +1,28 @@
+name: Upload v0.3.4 Exe
+on: [push]
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Publish
+        run: dotnet publish src\KeyR.csproj -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained false -p:DebugType=none -p:DebugSymbols=false -p:Product=KeyR -p:Title=KeyR -p:AssemblyTitle=KeyR -o build_output
+
+      - name: Rename Executable
+        run: |
+          if (Test-Path "build_output\SupTask.exe") { Rename-Item "build_output\SupTask.exe" "KeyR_v0.3.4_win_x64.exe" }
+          elseif (Test-Path "build_output\KeyR.exe") { Rename-Item "build_output\KeyR.exe" "KeyR_v0.3.4_win_x64.exe" }
+
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v0.3.4 build_output/KeyR_v0.3.4_win_x64.exe --clobber
