@@ -7,106 +7,33 @@ namespace SupTask;
 public static class BypassInput
 {
 	[Flags]
-	public enum InputType
+	public enum KeyEventF : uint
 	{
-		INPUT_MOUSE = 0,
-		INPUT_KEYBOARD = 1,
-		INPUT_HARDWARE = 2
+		KeyDown = 0u,
+		ExtendedKey = 1u,
+		KeyUp = 2u,
+		Unicode = 4u,
+		Scancode = 8u
 	}
 
 	[Flags]
-	public enum KeyEventF
+	public enum MouseEventF : uint
 	{
-		KeyDown = 0,
-		ExtendedKey = 1,
-		KeyUp = 2,
-		Unicode = 4,
-		Scancode = 8
+		Absolute = 0x8000u,
+		HWheel = 0x1000u,
+		Move = 1u,
+		MoveNoCoalesce = 0x2000u,
+		LeftDown = 2u,
+		LeftUp = 4u,
+		RightDown = 8u,
+		RightUp = 0x10u,
+		MiddleDown = 0x20u,
+		MiddleUp = 0x40u,
+		VirtualDesk = 0x4000u,
+		Wheel = 0x800u,
+		XDown = 0x80u,
+		XUp = 0x100u
 	}
-
-	[Flags]
-	public enum MouseEventF
-	{
-		Absolute = 0x8000,
-		HWheel = 0x1000,
-		Move = 1,
-		MoveNoCoalesce = 0x2000,
-		LeftDown = 2,
-		LeftUp = 4,
-		RightDown = 8,
-		RightUp = 0x10,
-		MiddleDown = 0x20,
-		MiddleUp = 0x40,
-		VirtualDesk = 0x4000,
-		Wheel = 0x800,
-		XDown = 0x80,
-		XUp = 0x100
-	}
-
-	public struct HARDWAREINPUT
-	{
-		public uint uMsg;
-
-		public ushort wParamL;
-
-		public ushort wParamH;
-	}
-
-	public struct KEYBDINPUT
-	{
-		public ushort wVk;
-
-		public ushort wScan;
-
-		public uint dwFlags;
-
-		public uint time;
-
-		public nint dwExtraInfo;
-	}
-
-	public struct MOUSEINPUT
-	{
-		public int dx;
-
-		public int dy;
-
-		public uint mouseData;
-
-		public uint dwFlags;
-
-		public uint time;
-
-		public nint dwExtraInfo;
-	}
-
-	[StructLayout(LayoutKind.Explicit)]
-	public struct MOUSEKEYBDHARDWAREINPUT
-	{
-		[FieldOffset(0)]
-		public HARDWAREINPUT hi;
-
-		[FieldOffset(0)]
-		public KEYBDINPUT ki;
-
-		[FieldOffset(0)]
-		public MOUSEINPUT mi;
-	}
-
-	public struct INPUT
-	{
-		public uint type;
-
-		public MOUSEKEYBDHARDWAREINPUT mkhi;
-	}
-
-	private static readonly int InputSize = Marshal.SizeOf(typeof(INPUT));
-
-	private static readonly INPUT[] _keyInput = new INPUT[1];
-
-	private static readonly INPUT[] _mouseInput = new INPUT[1];
-
-	private static readonly INPUT[] _scrollInput = new INPUT[2];
 
 	private static double _cachedScreenWidth;
 
@@ -115,7 +42,10 @@ public static class BypassInput
 	private static bool _screenCached;
 
 	[DllImport("user32.dll")]
-	private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+	private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+
+	[DllImport("user32.dll")]
+	private static extern void mouse_event(uint dwFlags, int dx, int dy, uint dwData, int dwExtraInfo);
 
 	[DllImport("user32.dll")]
 	private static extern uint MapVirtualKey(uint uCode, uint uMapType);
@@ -137,19 +67,13 @@ public static class BypassInput
 
 	public static void SendKey(ushort keycode, bool isDown)
 	{
-		ushort wScan = (ushort)MapVirtualKey(keycode, 0u);
-		_keyInput[0].type = 1u;
-		_keyInput[0].mkhi.ki.wVk = 0;
-		_keyInput[0].mkhi.ki.wScan = wScan;
-		_keyInput[0].mkhi.ki.time = 0u;
-		_keyInput[0].mkhi.ki.dwExtraInfo = IntPtr.Zero;
-		uint num = 8u;
+		byte bScan = (byte)MapVirtualKey(keycode, 0u);
+		uint num = 0u;
 		if (!isDown)
 		{
 			num |= 2;
 		}
-		_keyInput[0].mkhi.ki.dwFlags = num;
-		SendInput(1u, _keyInput, InputSize);
+		keybd_event((byte)keycode, bScan, num, 0);
 	}
 
 	public static void SendMouseClick(string button, bool isDown)
@@ -169,14 +93,7 @@ public static class BypassInput
 		}
 		if (num != 0)
 		{
-			_mouseInput[0].type = 0u;
-			_mouseInput[0].mkhi.mi.dx = 0;
-			_mouseInput[0].mkhi.mi.dy = 0;
-			_mouseInput[0].mkhi.mi.mouseData = 0u;
-			_mouseInput[0].mkhi.mi.time = 0u;
-			_mouseInput[0].mkhi.mi.dwFlags = num;
-			_mouseInput[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
-			SendInput(1u, _mouseInput, InputSize);
+			mouse_event(num, 0, 0, 0u, 0);
 		}
 	}
 
@@ -185,33 +102,13 @@ public static class BypassInput
 		EnsureScreenCached();
 		int dx = (int)((double)(x * 65536) / _cachedScreenWidth) + 1;
 		int dy = (int)((double)(y * 65536) / _cachedScreenHeight) + 1;
-		_mouseInput[0].type = 0u;
-		_mouseInput[0].mkhi.mi.dx = dx;
-		_mouseInput[0].mkhi.mi.dy = dy;
-		_mouseInput[0].mkhi.mi.mouseData = 0u;
-		_mouseInput[0].mkhi.mi.time = 0u;
-		_mouseInput[0].mkhi.mi.dwFlags = 32769u;
-		_mouseInput[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
-		SendInput(1u, _mouseInput, InputSize);
+		mouse_event(32769u, dx, dy, 0u, 0);
 	}
 
 	public static void SendMouseWheelAt(int x, int y, int delta, bool horizontal)
 	{
-		EnsureScreenCached();
-		int dx = (int)((double)(x * 65536) / _cachedScreenWidth) + 1;
-		int dy = (int)((double)(y * 65536) / _cachedScreenHeight) + 1;
-		_scrollInput[0].type = 0u;
-		_scrollInput[0].mkhi.mi.dx = dx;
-		_scrollInput[0].mkhi.mi.dy = dy;
-		_scrollInput[0].mkhi.mi.mouseData = 0u;
-		_scrollInput[0].mkhi.mi.dwFlags = 32769u;
-		_scrollInput[1].type = 0u;
-		_scrollInput[1].mkhi.mi.dx = 0;
-		_scrollInput[1].mkhi.mi.dy = 0;
-		_scrollInput[1].mkhi.mi.mouseData = (uint)delta;
-		_scrollInput[1].mkhi.mi.dwFlags = (horizontal ? 4096u : 2048u);
-		_scrollInput[1].mkhi.mi.dwExtraInfo = IntPtr.Zero;
-		SendInput(2u, _scrollInput, InputSize);
+		SendMouseMove(x, y);
+		mouse_event(horizontal ? 4096u : 2048u, 0, 0, (uint)delta, 0);
 	}
 
 	public static void ReleaseModifiers()

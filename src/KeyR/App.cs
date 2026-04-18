@@ -50,6 +50,7 @@ public class App : Application
 		}
 		else
 		{
+			ThemeEngine.Apply(Settings.Load().IsDarkTheme);
 			base.OnStartup(e);
 			AppDomain.CurrentDomain.UnhandledException += delegate(object s, UnhandledExceptionEventArgs ev)
 			{

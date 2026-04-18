@@ -23,8 +23,10 @@
     
     
     
+    
     <Resource Include="appicon.png" />
     <Resource Include="themedconfirmwindow.baml" />
+    <Resource Include="settingswindow.baml" />
     <Resource Include="mainwindow.baml" />
     <Resource Include="conditioneditorwindow.baml" />
   </ItemGroup>

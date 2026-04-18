@@ -4,7 +4,7 @@ public class MacroEvent
 {
 	public EventType Type { get; set; }
 
-	public long Delay { get; set; }
+	public double Delay { get; set; }
 
 	public int X { get; set; }
 

@@ -18,6 +18,8 @@ public class ConditionEditorWindow : Window, IComponentConnector
 {
 	private Func<string, bool> _isDuplicate;
 
+	private Settings _settings;
+
 	internal Popup HoverTooltip;
 
 	internal TextBlock TxtHoverTooltip;
@@ -64,12 +66,23 @@ public class ConditionEditorWindow : Window, IComponentConnector
 
 	public RestartCondition Condition { get; private set; }
 
-	public ConditionEditorWindow(RestartCondition existingCondition, string title, Func<string, bool> isNameDuplicate)
+	public ConditionEditorWindow(RestartCondition existingCondition, string title, Func<string, bool> isNameDuplicate, Settings settings)
 	{
 		InitializeComponent();
 		_isDuplicate = isNameDuplicate;
+		_settings = settings;
 		TxtWindowTitle.Text = title.ToUpper();
 		Condition = existingCondition ?? new RestartCondition();
+		if (_settings.ConditionWindowX != -1.0 && _settings.ConditionWindowY != -1.0)
+		{
+			base.WindowStartupLocation = WindowStartupLocation.Manual;
+			base.Left = _settings.ConditionWindowX;
+			base.Top = _settings.ConditionWindowY;
+		}
+		else
+		{
+			base.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+		}
 		PopulateData();
 	}
 
@@ -93,6 +106,16 @@ public class ConditionEditorWindow : Window, IComponentConnector
 	private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
 	{
 		DragMove();
+	}
+
+	private void Window_LocationChanged(object sender, EventArgs e)
+	{
+		if (base.IsLoaded && _settings != null)
+		{
+			_settings.ConditionWindowX = base.Left;
+			_settings.ConditionWindowY = base.Top;
+			_settings.Save();
+		}
 	}
 
 	private void CmbType_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -321,6 +344,7 @@ public class ConditionEditorWindow : Window, IComponentConnector
 		{
 		case 1:
 			((ConditionEditorWindow)target).MouseLeftButtonDown += Window_MouseLeftButtonDown;
+			((ConditionEditorWindow)target).LocationChanged += Window_LocationChanged;
 			break;
 		case 2:
 			HoverTooltip = (Popup)target;

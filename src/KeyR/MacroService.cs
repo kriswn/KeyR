@@ -35,11 +35,19 @@ public class MacroService : IDisposable
 
 	private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
 
+	private const long MAX_RECORDING_MS = 356400000L;
+
+	private long _totalRecordedMs;
+
 	private volatile int _loopsRemaining;
 
 	private volatile bool _restartRequested;
 
 	private volatile bool _disposed;
+
+	private long _playbackStartTicks;
+
+	private double _playbackSpeed = 1.0;
 
 	private ConditionEngine _engine;
 
@@ -78,6 +86,21 @@ public class MacroService : IDisposable
 	}
 
 	public bool HotkeysSuspended { get; set; }
+
+	public long PlaybackElapsedMs
+	{
+		get
+		{
+			long num = Interlocked.Read(in _playbackStartTicks);
+			if (num == 0L)
+			{
+				return 0L;
+			}
+			return (long)((double)(Stopwatch.GetTimestamp() - num) * 1000.0 / (double)Stopwatch.Frequency);
+		}
+	}
+
+	public double PlaybackSpeed => _playbackSpeed;
 
 	public event StatusChangedHandler OnStatusChanged;
 
@@ -193,31 +216,42 @@ public class MacroService : IDisposable
 		{
 			_events.Clear();
 			_recHook = Hook.GlobalEvents();
-			_recHook.MouseDownExt += delegate(object? s, MouseEventExtArgs e)
-			{
-				LogMouse(e, true);
-			};
-			_recHook.MouseUpExt += delegate(object? s, MouseEventExtArgs e)
-			{
-				LogMouse(e, false);
-			};
-			_recHook.MouseMove += delegate(object? s, MouseEventArgs e)
-			{
-				LogMouse(e, null);
-			};
+			_recHook.MouseDownExt += RecHook_MouseDownExt;
+			_recHook.MouseUpExt += RecHook_MouseUpExt;
+			_recHook.MouseMove += RecHook_MouseMove;
 			_recHook.MouseWheelExt += GlobalHook_MouseWheelExt;
-			_recHook.KeyDown += delegate(object? s, KeyEventArgs e)
-			{
-				LogKey(e, isDown: true);
-			};
-			_recHook.KeyUp += delegate(object? s, KeyEventArgs e)
-			{
-				LogKey(e, isDown: false);
-			};
+			_recHook.KeyDown += RecHook_KeyDown;
+			_recHook.KeyUp += RecHook_KeyUp;
 			_isRecording = true;
+			_totalRecordedMs = 0L;
 			_stopwatch.Restart();
 			this.OnStatusChanged?.Invoke("Recording", isRecording: true, isPlaying: false);
 		}
+	}
+
+	private void RecHook_MouseDownExt(object sender, MouseEventExtArgs e)
+	{
+		LogMouse(e, true);
+	}
+
+	private void RecHook_MouseUpExt(object sender, MouseEventExtArgs e)
+	{
+		LogMouse(e, false);
+	}
+
+	private void RecHook_MouseMove(object sender, MouseEventArgs e)
+	{
+		LogMouse(e, null);
+	}
+
+	private void RecHook_KeyDown(object sender, KeyEventArgs e)
+	{
+		LogKey(e, isDown: true);
+	}
+
+	private void RecHook_KeyUp(object sender, KeyEventArgs e)
+	{
+		LogKey(e, isDown: false);
 	}
 
 	private void StopRecording()
@@ -229,6 +263,12 @@ public class MacroService : IDisposable
 		_isRecording = false;
 		if (_recHook != null)
 		{
+			_recHook.MouseDownExt -= RecHook_MouseDownExt;
+			_recHook.MouseUpExt -= RecHook_MouseUpExt;
+			_recHook.MouseMove -= RecHook_MouseMove;
+			_recHook.MouseWheelExt -= GlobalHook_MouseWheelExt;
+			_recHook.KeyDown -= RecHook_KeyDown;
+			_recHook.KeyUp -= RecHook_KeyUp;
 			_recHook.Dispose();
 			_recHook = null;
 		}
@@ -247,12 +287,12 @@ public class MacroService : IDisposable
 
 	private void GlobalHook_MouseWheelExt(object sender, MouseEventExtArgs e)
 	{
-		long elapsedMilliseconds = _stopwatch.ElapsedMilliseconds;
+		double delay = (double)_stopwatch.ElapsedTicks * 1000.0 / (double)Stopwatch.Frequency;
 		_stopwatch.Restart();
 		_events.Add(new MacroEvent
 		{
 			Type = EventType.MouseEvent,
-			Delay = elapsedMilliseconds,
+			Delay = delay,
 			X = e.X,
 			Y = e.Y,
 			Button = "Wheel",
@@ -262,8 +302,21 @@ public class MacroService : IDisposable
 
 	private void LogMouse(MouseEventArgs e, bool? isDown)
 	{
-		long elapsedMilliseconds = _stopwatch.ElapsedMilliseconds;
+		double num = (double)_stopwatch.ElapsedTicks * 1000.0 / (double)Stopwatch.Frequency;
 		_stopwatch.Restart();
+		_totalRecordedMs += (long)num;
+		if (_totalRecordedMs >= 356400000)
+		{
+			System.Windows.Application current = System.Windows.Application.Current;
+			if (current != null)
+			{
+				((DispatcherObject)current).Dispatcher.BeginInvoke((Delegate)(Action)delegate
+				{
+					StopRecording();
+				}, Array.Empty<object>());
+			}
+			return;
+		}
 		string button = "Move";
 		if (isDown.HasValue)
 		{
@@ -272,7 +325,7 @@ public class MacroService : IDisposable
 		_events.Add(new MacroEvent
 		{
 			Type = EventType.MouseEvent,
-			Delay = elapsedMilliseconds,
+			Delay = num,
 			X = e.X,
 			Y = e.Y,
 			Button = button,
@@ -282,15 +335,30 @@ public class MacroService : IDisposable
 
 	private void LogKey(KeyEventArgs e, bool isDown)
 	{
-		long elapsedMilliseconds = _stopwatch.ElapsedMilliseconds;
+		double num = (double)_stopwatch.ElapsedTicks * 1000.0 / (double)Stopwatch.Frequency;
 		_stopwatch.Restart();
-		_events.Add(new MacroEvent
+		_totalRecordedMs += (long)num;
+		if (_totalRecordedMs >= 356400000)
 		{
-			Type = EventType.KeyEvent,
-			Delay = elapsedMilliseconds,
-			KeyCode = (int)e.KeyCode,
-			IsDown = isDown
-		});
+			System.Windows.Application current = System.Windows.Application.Current;
+			if (current != null)
+			{
+				((DispatcherObject)current).Dispatcher.BeginInvoke((Delegate)(Action)delegate
+				{
+					StopRecording();
+				}, Array.Empty<object>());
+			}
+		}
+		else
+		{
+			_events.Add(new MacroEvent
+			{
+				Type = EventType.KeyEvent,
+				Delay = num,
+				KeyCode = (int)e.KeyCode,
+				IsDown = isDown
+			});
+		}
 	}
 
 	private void StartPlaying(Settings settings)
@@ -366,37 +434,47 @@ public class MacroService : IDisposable
 		{
 			num = 1.0;
 		}
+		_playbackSpeed = num;
 		bool flag = _loopsRemaining < 0;
 		try
 		{
 			while (!token.IsCancellationRequested && (flag || _loopsRemaining > 0))
 			{
+				Interlocked.Exchange(ref _playbackStartTicks, Stopwatch.GetTimestamp());
+				long timestamp = Stopwatch.GetTimestamp();
 				long num2 = 0L;
-				Stopwatch stopwatch = Stopwatch.StartNew();
 				foreach (MacroEvent @event in _events)
 				{
 					if (token.IsCancellationRequested)
 					{
-						break;
+						return;
 					}
-					long num3 = (long)((double)@event.Delay / num);
+					long num3 = (long)(@event.Delay * (double)Stopwatch.Frequency / 1000.0 / num);
 					num2 += num3;
-					long num4 = num2 - stopwatch.ElapsedMilliseconds;
-					if (num4 > 15)
+					long num4 = timestamp + num2;
+					while (true)
 					{
-						token.WaitHandle.WaitOne((int)(num4 - 10));
 						if (token.IsCancellationRequested)
+						{
+							return;
+						}
+						long timestamp2 = Stopwatch.GetTimestamp();
+						if (timestamp2 >= num4)
 						{
 							break;
 						}
-					}
-					while (stopwatch.ElapsedMilliseconds < num2 && !token.IsCancellationRequested)
-					{
-						Thread.SpinWait(100);
+						if (num4 - timestamp2 > Stopwatch.Frequency / 1000 * 15)
+						{
+							Thread.Sleep(1);
+						}
+						else
+						{
+							Thread.SpinWait(10);
+						}
 					}
 					if (token.IsCancellationRequested)
 					{
-						break;
+						return;
 					}
 					if (@event.Type == EventType.MouseEvent)
 					{
@@ -549,7 +627,7 @@ public class MacroService : IDisposable
 		{
 			return 0L;
 		}
-		return _events.Sum((MacroEvent x) => x.Delay);
+		return (long)_events.Sum((MacroEvent x) => x.Delay);
 	}
 
 	public void Dispose()

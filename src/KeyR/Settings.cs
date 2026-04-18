@@ -32,6 +32,16 @@ public class Settings
 
 	public double ExpandedHeight { get; set; } = -1.0;
 
+	public bool IsDarkTheme { get; set; } = true;
+
+	public double SettingsWindowX { get; set; } = -1.0;
+
+	public double SettingsWindowY { get; set; } = -1.0;
+
+	public double ConditionWindowX { get; set; } = -1.0;
+
+	public double ConditionWindowY { get; set; } = -1.0;
+
 	public bool HideDeleteConfirmation { get; set; }
 
 	public int ConditionsPollingInterval { get; set; } = 1000;
