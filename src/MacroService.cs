@@ -100,6 +100,9 @@ namespace KeyR
             [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
             public static extern IntPtr GetModuleHandle(string lpModuleName);
 
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern int GetSystemMetrics(int nIndex);
+
             public const int WH_MOUSE_LL = 14;
             public const int WH_KEYBOARD_LL = 13;
 
@@ -652,7 +655,8 @@ namespace KeyR
             double targetH = NativeMethods.GetSystemMetrics(79); if (targetH == 0) targetH = NativeMethods.GetSystemMetrics(1);
 
             // Pass 1: Analysis - Discover coordinate system and range
-            double maxX = 0, maxY = 0;
+            double maxX = double.MinValue, maxY = double.MinValue;
+            double minX = double.MaxValue, minY = double.MaxValue;
             bool foundCoords = false;
 
             foreach (var line in lines)
@@ -666,9 +670,9 @@ namespace KeyR
 
                 if (type == "MOVE" || type == "MOUSE_MOVE")
                 {
-                    if (parts.Length >= 4) // TYPE|DELAY|X|Y or TYPE|DELAY|B|X|Y
+                    if (parts.Length >= 4)
                         coordParts = (parts.Length >= 5) ? new[] { parts[3], parts[4] } : new[] { parts[2], parts[3] };
-                    else // TYPE|DELAY|X,Y
+                    else
                     {
                         var dp = parts[2].Split(',');
                         if (dp.Length >= 2) coordParts = new[] { dp[0], dp[1] };
@@ -676,9 +680,9 @@ namespace KeyR
                 }
                 else if (type.Contains("MOUSE"))
                 {
-                    if (parts.Length >= 5) // TYPE|DELAY|B|X|Y
+                    if (parts.Length >= 5)
                         coordParts = new[] { parts[3], parts[4] };
-                    else // TYPE|DELAY|B,X,Y
+                    else
                     {
                         var dp = parts[2].Split(',');
                         if (dp.Length >= 3) coordParts = new[] { dp[1], dp[2] };
@@ -687,25 +691,43 @@ namespace KeyR
                 }
 
                 if (coordParts != null && coordParts.Length >= 2 && 
-                    double.TryParse(coordParts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double x) && double.TryParse(coordParts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double y))
+                    double.TryParse(coordParts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double x) && 
+                    double.TryParse(coordParts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double y))
                 {
                     if (x > maxX) maxX = x;
+                    if (x < minX) minX = x;
                     if (y > maxY) maxY = y;
+                    if (y < minY) minY = y;
                     foundCoords = true;
                 }
             }
 
-            // Determine scaling factor
+            // Determine scaling factor and offsets
             double scaleX = 1.0, scaleY = 1.0;
-            string scaleInfo = "Raw Pixels";
+            double offsetX = 0, offsetY = 0;
+            string scaleInfo = "Raw Pixels - AutoCentered";
+            
             if (foundCoords)
             {
-                if (maxX <= 1.05) { scaleX = targetW; scaleY = targetH; scaleInfo = "0..1 Scale"; }
-                else if (maxX <= 1005) { scaleX = targetW / 1000.0; scaleY = targetH / 1000.0; scaleInfo = "0..1000 Scale"; }
-                else if (maxX <= 65536) 
+                if (maxX > targetW + 500 && maxX <= 65536) 
                 {
-                    if (maxX > targetW + 100) { scaleX = targetW / 65535.0; scaleY = targetH / 65535.0; scaleInfo = "Normalized (65k)"; }
-                    else if (Math.Abs(maxX - 1920) < 10 || Math.Abs(maxY - 1080) < 10) { scaleX = targetW / 1920.0; scaleY = targetH / 1080.0; scaleInfo = "Scale 1080p -> Current"; }
+                    scaleX = targetW / 65535.0; 
+                    scaleY = targetH / 65535.0; 
+                    scaleInfo = "Normalized (65k)";
+                }
+                else
+                {
+                    double primaryW = NativeMethods.GetSystemMetrics(0);
+                    double primaryH = NativeMethods.GetSystemMetrics(1);
+
+                    double midX = (minX + maxX) / 2.0;
+                    double midY = (minY + maxY) / 2.0;
+
+                    if ((maxX - minX) < (primaryW * 0.9) && (maxY - minY) < (primaryH * 0.9))
+                    {
+                        offsetX = (primaryW / 2.0) - midX;
+                        offsetY = (primaryH / 2.0) - midY;
+                    }
                 }
             }
 
@@ -750,8 +772,8 @@ namespace KeyR
                     if (coordParts != null && coordParts.Length >= 2 && 
                         double.TryParse(coordParts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double x) && double.TryParse(coordParts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double y))
                     {
-                        lastX = (int)(x * scaleX);
-                        lastY = (int)(y * scaleY);
+                        lastX = (int)((x * scaleX) + offsetX);
+                        lastY = (int)((y * scaleY) + offsetY);
                     }
 
                     if (btn == "2") btn = "Right";
@@ -913,6 +935,9 @@ namespace KeyR
         }
     }
 }
+
+
+
 
 
 

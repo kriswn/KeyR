@@ -1225,9 +1225,9 @@
                 Capture mouse and keyboard actions, then replay them at any speed — zero scripting, zero setup.
             </p>
             <div class="hero__actions">
-                <a href="downloads/KeyR_v0.3.3_win_x64.exe" class="btn btn--primary" download data-version="v0_3_3" onclick="checkOS(event)">
+                <a href="downloads/KeyR_v0.3.4_win_x64.exe" class="btn btn--primary" download data-version="v0_3_4" onclick="checkOS(event)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download Beta v0.3.3
+                    Download Beta v0.3.4
                 </a>
                 <a href="#downloads" class="btn btn--secondary">
                     All Releases
@@ -1312,28 +1312,57 @@
                         </div>
                     </div>
                     <div class="channel__list" id="beta-list">
-                        <!-- v0.3.3 Beta -->
+
+                        <!-- v0.3.4 Beta -->
                         <div class="release release--collapsible release--latest release--latest-beta" style="cursor: pointer;">
                             <div class="release__toggle" aria-expanded="true">
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span class="release__version">v0.3.3 Beta</span>
+                                    <span class="release__version">v0.3.4 Beta</span>
                                     <span class="release__tag release__tag--beta">LATEST BETA</span>
                                 </div>
                                 <svg class="release__toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
-                            <p class="release__meta">April 13, 2026 · ~635 KB · Windows x64</p>
+                            <p class="release__meta">April 18, 2026 &middot; ~650 KB &middot; Windows x64</p>
                             
                             <div class="collapse-content expanded">
                                 <div>
                                     <div class="release__notes">
-                                        <h4>.NET Bootstrapper & Dependency Checks</h4>
+                                        <h4>Dynamic Centroid Engine (InformaalTask FIx)</h4>
                                         <ul>
-                                            <li>Smart First-Boot Check: Proactively verifies .NET 9 Desktop Runtime components on launch.</li>
-                                            <li>Themed Information Dialogs: Missing requirements are now communicated through beautiful native UI.</li>
-                                            <li>Automatically prompts the user to download .NET dependencies natively via Microsoft.</li>
+                                            <li>Fixed critical offset bug when importing InformaalTask foreign macros.</li>
+                                            <li>Engine now maps pure relative zero-based macro grids perfectly onto physical desktop centers dynamically.</li>
+                                            <li>Added native algorithmic geometry scaling ensuring accurate coordinate bounds without physical distortion.</li>
                                         </ul>
                                     </div>
-                                    <a href="downloads/KeyR_v0.3.3_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_3_3" onclick="checkOS(event)">
+                                    <a href="downloads/KeyR_v0.3.4_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_3_4" onclick="checkOS(event)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        Download v0.3.4 Beta
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- v0.3.3 Beta -->
+                        <div class="release release--collapsible" style="cursor: pointer;">
+                            <div class="release__toggle" aria-expanded="false">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="release__version">v0.3.3 Beta</span>
+                                </div>
+                                <svg class="release__toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <p class="release__meta">April 13, 2026 &middot; ~650 KB &middot; Windows x64</p>
+                            
+                            <div class="collapse-content">
+                                <div>
+                                    <div class="release__notes">
+                                        <h4>Rebranding &amp; Engine Architecture Framework</h4>
+                                        <ul>
+                                            <li>Officially rebranded all components, UI tags, execution scopes, and source history from "SupTask" to "KeyR".</li>
+                                            <li>Enforced robust .NET 9 Desktop Runtime Bootstrapper to proactively prevent soft-crashes.</li>
+                                            <li>Added Missing Requirements themed dynamic user interface via Windows APIs.</li>
+                                        </ul>
+                                    </div>
+                                    <a href="downloads/KeyR_v0.3.4_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_3_4" onclick="checkOS(event)">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                         Download v0.3.3 Beta
                                     </a>
@@ -1349,18 +1378,16 @@
                                 </div>
                                 <svg class="release__toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </div>
-                            <p class="release__meta">April 13, 2026 · ~634 KB · Windows x64</p>
+                            <p class="release__meta">April 13, 2026 &middot; ~648 KB &middot; Windows x64</p>
                             
                             <div class="collapse-content">
                                 <div>
                                     <div class="release__notes">
-                                        <h4>Engine Overhaul &amp; Recording Timer</h4>
+                                        <h4>Win32 SendInput &amp; Precision Execution</h4>
                                         <ul>
-                                            <li>Replaced MouseKeyHook recording with native Win32 low-level hooks (WH_MOUSE_LL / WH_KEYBOARD_LL)</li>
-                                            <li>Full capture of XButton1/XButton2, horizontal wheel, and extended key flags</li>
-                                            <li>Live recording timer in the title bar — mirrors playback countdown</li>
-                                            <li>Sub-millisecond playback timing with 3-tier precision wait strategy</li>
-                                            <li>Improved playback stability and instant stop responsiveness</li>
+                                            <li>Deprecated generic mouse wrappers in favor of absolute physical hardware input layers (SendInput).</li>
+                                            <li>Fixed critical blockages and system key capturing during high-intensity input recordings.</li>
+                                            <li>Introduced UI timeline tracking and native overlay precision components.</li>
                                         </ul>
                                     </div>
                                     <a href="downloads/KeyR_v0.3.2_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_3_2" onclick="checkOS(event)">
@@ -1370,69 +1397,7 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- v0.3.1 Beta -->
-                        <div class="release release--collapsible" style="cursor: pointer;">
-                            <div class="release__toggle" aria-expanded="false">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span class="release__version">v0.3.1 Beta</span>
-                                </div>
-                                <svg class="release__toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </div>
-                            <p class="release__meta">April 7, 2026 · ~622 KB · Windows x64</p>
-                            
-                            <div class="collapse-content">
-                                <div>
-                                    <div class="release__notes">
-                                        <h4>UI &amp; Settings Enhancements</h4>
-                                        <ul>
-                                            <li>Foreign Macro Conversion: Import InformaalTask and TinyTask macros natively</li>
-                                            <li>UX Refinements: Settings button now toggles window properly</li>
-                                            <li>Theme selector updated to a consistent dropdown style</li>
-                                            <li>Smart UI visibility for Restricted mode based on logic settings</li>
-                                        </ul>
-                                    </div>
-                                    <a href="downloads/KeyR_v0.3.1_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_3_1" onclick="checkOS(event)">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                        Download v0.3.1 Beta
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-                </div>
-
-                <!-- WIP Channel -->
-                <div class="channel channel--wip fade-in">
-                    <div class="channel__header">
-                        <div class="channel__icon">🛠️</div>
-                        <div>
-                            <h3 class="channel__title" style="color: var(--wip-red);">Development</h3>
-                            <p class="channel__desc">Work in Progress</p>
-                        </div>
-                    </div>
-                    <div class="channel__list">
-                        <div class="wip-card" style="margin-bottom: 0;">
-                            <div class="release__top">
-                                <span class="release__version">v0.4.0</span>
-                                <span class="release__tag release__tag--wip">UNDER DEVELOPMENT</span>
-                            </div>
-                            <p class="release__meta">Preview Only</p>
-                            <div class="release__notes">
-                                <h4>Advanced Conditional Monitoring</h4>
-                                <ul style="color: var(--text-secondary); font-size: 13px;">
-                                    <li>Conditional macros create separate threads</li>
-                                    <li>Monitor device states and screen changes</li>
-                                    <li>Trigger macros autonomously based on dynamic criteria</li>
-                                </ul>
-                            </div>
-                            <div class="btn btn--download-wip" style="margin-top: 14px; opacity: 0.5; cursor: not-allowed; border-color: rgba(196, 64, 64, 0.15); color: var(--text-muted); background: rgba(255, 255, 255, 0.02); display: flex; align-items: center; justify-content: center;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" style="margin-right:6px;" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                Locked Preview
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -1935,4 +1900,5 @@
     </script>
 </body>
 </html>
+
 
