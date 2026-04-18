@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -30,6 +31,18 @@ public class Settings
 	public double Y { get; set; } = -1.0;
 
 	public double ExpandedHeight { get; set; } = -1.0;
+
+	public bool HideDeleteConfirmation { get; set; }
+
+	public int ConditionsPollingInterval { get; set; } = 1000;
+
+	public bool UseSmartRestart { get; set; }
+
+	public bool WaitConditionToRestart { get; set; }
+
+	public bool MatchAllConditions { get; set; }
+
+	public List<RestartCondition> RestartConditions { get; set; } = new List<RestartCondition>();
 
 	private static string GetSettingsPath()
 	{

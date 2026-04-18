@@ -104,9 +104,9 @@ public static class BypassInput
 
 	private static readonly INPUT[] _keyInput = new INPUT[1];
 
-	private static readonly INPUT[] _mouseClickInput = new INPUT[1];
+	private static readonly INPUT[] _mouseInput = new INPUT[1];
 
-	private static readonly INPUT[] _mouseMoveInput = new INPUT[1];
+	private static readonly INPUT[] _scrollInput = new INPUT[2];
 
 	private static double _cachedScreenWidth;
 
@@ -169,14 +169,14 @@ public static class BypassInput
 		}
 		if (num != 0)
 		{
-			_mouseClickInput[0].type = 0u;
-			_mouseClickInput[0].mkhi.mi.dx = 0;
-			_mouseClickInput[0].mkhi.mi.dy = 0;
-			_mouseClickInput[0].mkhi.mi.mouseData = 0u;
-			_mouseClickInput[0].mkhi.mi.time = 0u;
-			_mouseClickInput[0].mkhi.mi.dwFlags = num;
-			_mouseClickInput[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
-			SendInput(1u, _mouseClickInput, InputSize);
+			_mouseInput[0].type = 0u;
+			_mouseInput[0].mkhi.mi.dx = 0;
+			_mouseInput[0].mkhi.mi.dy = 0;
+			_mouseInput[0].mkhi.mi.mouseData = 0u;
+			_mouseInput[0].mkhi.mi.time = 0u;
+			_mouseInput[0].mkhi.mi.dwFlags = num;
+			_mouseInput[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
+			SendInput(1u, _mouseInput, InputSize);
 		}
 	}
 
@@ -185,14 +185,42 @@ public static class BypassInput
 		EnsureScreenCached();
 		int dx = (int)((double)(x * 65536) / _cachedScreenWidth) + 1;
 		int dy = (int)((double)(y * 65536) / _cachedScreenHeight) + 1;
-		_mouseMoveInput[0].type = 0u;
-		_mouseMoveInput[0].mkhi.mi.dx = dx;
-		_mouseMoveInput[0].mkhi.mi.dy = dy;
-		_mouseMoveInput[0].mkhi.mi.mouseData = 0u;
-		_mouseMoveInput[0].mkhi.mi.time = 0u;
-		_mouseMoveInput[0].mkhi.mi.dwFlags = 32769u;
-		_mouseMoveInput[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
-		SendInput(1u, _mouseMoveInput, InputSize);
+		_mouseInput[0].type = 0u;
+		_mouseInput[0].mkhi.mi.dx = dx;
+		_mouseInput[0].mkhi.mi.dy = dy;
+		_mouseInput[0].mkhi.mi.mouseData = 0u;
+		_mouseInput[0].mkhi.mi.time = 0u;
+		_mouseInput[0].mkhi.mi.dwFlags = 32769u;
+		_mouseInput[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
+		SendInput(1u, _mouseInput, InputSize);
+	}
+
+	public static void SendMouseWheelAt(int x, int y, int delta, bool horizontal)
+	{
+		EnsureScreenCached();
+		int dx = (int)((double)(x * 65536) / _cachedScreenWidth) + 1;
+		int dy = (int)((double)(y * 65536) / _cachedScreenHeight) + 1;
+		_scrollInput[0].type = 0u;
+		_scrollInput[0].mkhi.mi.dx = dx;
+		_scrollInput[0].mkhi.mi.dy = dy;
+		_scrollInput[0].mkhi.mi.mouseData = 0u;
+		_scrollInput[0].mkhi.mi.dwFlags = 32769u;
+		_scrollInput[1].type = 0u;
+		_scrollInput[1].mkhi.mi.dx = 0;
+		_scrollInput[1].mkhi.mi.dy = 0;
+		_scrollInput[1].mkhi.mi.mouseData = (uint)delta;
+		_scrollInput[1].mkhi.mi.dwFlags = (horizontal ? 4096u : 2048u);
+		_scrollInput[1].mkhi.mi.dwExtraInfo = IntPtr.Zero;
+		SendInput(2u, _scrollInput, InputSize);
+	}
+
+	public static void ReleaseModifiers()
+	{
+		ushort[] array = new ushort[5] { 17, 16, 18, 91, 92 };
+		for (int i = 0; i < array.Length; i++)
+		{
+			SendKey(array[i], isDown: false);
+		}
 	}
 }
 

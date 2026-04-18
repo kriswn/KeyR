@@ -21,8 +21,12 @@
   <ItemGroup>
     <None Remove="appicon.png" />
     
+    
+    
     <Resource Include="appicon.png" />
+    <Resource Include="themedconfirmwindow.baml" />
     <Resource Include="mainwindow.baml" />
+    <Resource Include="conditioneditorwindow.baml" />
   </ItemGroup>
   <ItemGroup>
     

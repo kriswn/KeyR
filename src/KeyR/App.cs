@@ -1,12 +1,25 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 
 namespace SupTask;
 
 public class App : Application
 {
+	private static Mutex _mutex;
+
+	[DllImport("user32.dll")]
+	private static extern bool SetForegroundWindow(nint hWnd);
+
+	[DllImport("user32.dll")]
+	private static extern bool ShowWindow(nint hWnd, int nCmdShow);
+
+	[DllImport("user32.dll")]
+	private static extern bool IsIconic(nint hWnd);
+
 	protected override void OnStartup(StartupEventArgs e)
     {
         System.Windows.EventManager.RegisterClassHandler(typeof(System.Windows.Window), System.Windows.Window.LoadedEvent, new System.Windows.RoutedEventHandler((s, ev) => {
@@ -15,11 +28,34 @@ public class App : Application
                 ReplaceTextForWindow(w);
             }
         }));
-		base.OnStartup(e);
-		AppDomain.CurrentDomain.UnhandledException += delegate(object s, UnhandledExceptionEventArgs ev)
+		_mutex = new Mutex(initiallyOwned: true, "KeyRAppMutex_V2", out var createdNew);
+		if (!createdNew)
 		{
-			MessageBox.Show($"Unhandled Exception: {ev.ExceptionObject}");
-		};
+			Process currentProcess = Process.GetCurrentProcess();
+			Process[] processesByName = Process.GetProcessesByName(currentProcess.ProcessName);
+			foreach (Process process in processesByName)
+			{
+				if (process.Id != currentProcess.Id)
+				{
+					nint mainWindowHandle = process.MainWindowHandle;
+					if (IsIconic(mainWindowHandle))
+					{
+						ShowWindow(mainWindowHandle, 9);
+					}
+					SetForegroundWindow(mainWindowHandle);
+					break;
+				}
+			}
+			Application.Current.Shutdown();
+		}
+		else
+		{
+			base.OnStartup(e);
+			AppDomain.CurrentDomain.UnhandledException += delegate(object s, UnhandledExceptionEventArgs ev)
+			{
+				MessageBox.Show($"Unhandled Exception: {ev.ExceptionObject}");
+			};
+		}
 	}
 
 	[DebuggerNonUserCode]

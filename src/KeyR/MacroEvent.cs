@@ -15,5 +15,7 @@ public class MacroEvent
 	public bool IsDown { get; set; }
 
 	public int KeyCode { get; set; }
+
+	public int ScrollDelta { get; set; }
 }
 

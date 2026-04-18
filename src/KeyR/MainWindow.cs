@@ -1,5 +1,6 @@
 using System;
 using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +24,7 @@ using Microsoft.Win32;
 
 namespace SupTask;
 
-public class MainWindow : Window, IComponentConnector
+public class MainWindow : Window, IComponentConnector, IStyleConnector
 {
 	private Settings _settings;
 
@@ -44,6 +45,10 @@ public class MainWindow : Window, IComponentConnector
 	private bool _isAnimatingTop;
 
 	private bool _isAnimatingHeight;
+
+	private ConditionEditorWindow _addWindow;
+
+	private Dictionary<RestartCondition, ConditionEditorWindow> _editWindows = new Dictionary<RestartCondition, ConditionEditorWindow>();
 
 	private static readonly SolidColorBrush RecordingBrush = CreateFrozenBrush("#e63946");
 
@@ -70,10 +75,6 @@ public class MainWindow : Window, IComponentConnector
 	internal Border MainBorder;
 
 	internal Grid MainWindowGrid;
-
-	internal System.Windows.Controls.Button BtnMinimize;
-
-	internal System.Windows.Controls.Button BtnCreativeClose;
 
 	internal System.Windows.Controls.Button BtnLoad;
 
@@ -105,6 +106,8 @@ public class MainWindow : Window, IComponentConnector
 
 	internal System.Windows.Controls.CheckBox ChkAlwaysOnTop;
 
+	internal System.Windows.Controls.CheckBox ChkShowConfirmations;
+
 	internal System.Windows.Controls.CheckBox ChkContinuous;
 
 	internal System.Windows.Controls.TextBox TxtLoopCount;
@@ -118,6 +121,18 @@ public class MainWindow : Window, IComponentConnector
 	internal System.Windows.Controls.TextBox TxtRecHotkey;
 
 	internal System.Windows.Controls.TextBox TxtPlayHotkey;
+
+	internal System.Windows.Controls.Button BtnConditionHelp;
+
+	internal System.Windows.Controls.Button BtnToggleMatchLogic;
+
+	internal System.Windows.Controls.Button BtnToggleRestartMode;
+
+	internal System.Windows.Controls.Button BtnToggleRestrictedMode;
+
+	internal System.Windows.Controls.TextBox TxtPollingInterval;
+
+	internal ItemsControl ListConditions;
 
 	internal System.Windows.Controls.TextBox TxtPosX;
 
@@ -142,30 +157,61 @@ public class MainWindow : Window, IComponentConnector
 		_macroService = new MacroService();
 		_macroService.OnStatusChanged += UpdateStatus;
 		base.Loaded += MainWindow_Loaded; base.Loaded += (s, e) => CheckAndReplaceSupTask(this);
+		LoadSettingsToUI();
 		base.Topmost = _settings.AlwaysOnTop;
+		_macroService.RegisterHotkeys(_settings);
 		if (_settings.X != -1.0 && _settings.Y != -1.0)
 		{
 			double virtualScreenWidth = SystemParameters.VirtualScreenWidth;
 			double virtualScreenHeight = SystemParameters.VirtualScreenHeight;
-			if (_settings.X > 0.0 && _settings.X < virtualScreenWidth - base.Width && _settings.Y > 0.0 && _settings.Y < virtualScreenHeight - base.Height)
+			if (_settings.X >= 0.0 && _settings.X <= virtualScreenWidth - base.Width && _settings.Y >= 0.0 && _settings.Y <= virtualScreenHeight - base.Height)
 			{
 				base.WindowStartupLocation = WindowStartupLocation.Manual;
 				base.Left = _settings.X;
 				base.Top = _settings.Y;
 			}
 		}
-		TxtRecHotkey.Text = _settings.RecHotkey;
-		TxtPlayHotkey.Text = _settings.PlayHotkey;
-		TxtLoopCount.Text = _settings.LoopCount.ToString();
-		TxtSpeed.Text = _settings.CustomSpeed.ToString();
-		ChkContinuous.IsChecked = _settings.LoopContinuous;
-		ChkAlwaysOnTop.IsChecked = _settings.AlwaysOnTop;
 		base.ResizeMode = ResizeMode.NoResize;
 		_isLoaded = true;
 		UpdatePrefUIState();
 		UpdatePositionUI();
 		ApplyResolutionScaling();
-		base.Height = 110.0;
+		base.Height = 117.0;
+	}
+
+	private void LoadSettingsToUI()
+	{
+		TxtRecHotkey.Text = _settings.RecHotkey;
+		TxtPlayHotkey.Text = _settings.PlayHotkey;
+		TxtLoopCount.Text = _settings.LoopCount.ToString();
+		TxtSpeed.Text = _settings.CustomSpeed.ToString();
+		ChkContinuous.IsChecked = _settings.LoopContinuous;
+		TxtPollingInterval.Text = _settings.ConditionsPollingInterval.ToString();
+		ChkShowConfirmations.IsChecked = !_settings.HideDeleteConfirmation;
+		ChkAlwaysOnTop.IsChecked = _settings.AlwaysOnTop;
+		if (BtnConditionHelp != null)
+		{
+			BtnConditionHelp.Tag = "The macro monitors your screen while playing.\nIf the condition(s) are met, it will immediately\nrestart from the beginning.";
+		}
+		if (BtnToggleMatchLogic != null)
+		{
+			BtnToggleMatchLogic.Content = (_settings.MatchAllConditions ? "Match: ALL" : "Match: ANY");
+			BtnToggleMatchLogic.Tag = (_settings.MatchAllConditions ? "Macro restarts only when ALL enabled\nconditions are met." : "Macro restarts when ANY enabled condition is met.");
+		}
+		if (BtnToggleRestartMode != null)
+		{
+			BtnToggleRestartMode.Content = (_settings.UseSmartRestart ? "Logic: SEQUENTIAL" : "Logic: REPETITIVE");
+			BtnToggleRestartMode.Tag = (_settings.UseSmartRestart ? "Once the condition is met, the macro will wait\nfor it to disappear before allowing further restarts." : "Triggers instantly and repeatedly as long as condition is met.");
+		}
+		if (BtnToggleRestrictedMode != null)
+		{
+			BtnToggleRestrictedMode.Content = (_settings.WaitConditionToRestart ? "Restricted: ON" : "Restricted: OFF");
+			BtnToggleRestrictedMode.Tag = (_settings.WaitConditionToRestart ? "Macro pauses at the end of the timeline\nand waits for conditions before looping." : "Macro loops naturally regardless of conditions.");
+		}
+		UpdatePrefUIState();
+		UpdatePositionUI();
+		RefreshConditionsList();
+		base.Topmost = _settings.AlwaysOnTop;
 	}
 
 	private void ApplyResolutionScaling()
@@ -184,7 +230,7 @@ public class MainWindow : Window, IComponentConnector
 		base.Width = 300.0 * num;
 		if (!_prefsExpanded)
 		{
-			base.Height = 110.0 * num;
+			base.Height = 117.0 * num;
 		}
 	}
 
@@ -198,8 +244,8 @@ public class MainWindow : Window, IComponentConnector
 		//IL_008a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b2: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02b7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02f7: Unknown result type (might be due to invalid IL or missing references)
+		//IL_02fc: Unknown result type (might be due to invalid IL or missing references)
 		_prefsExpanded = !_prefsExpanded;
 		double num = 0.0;
 		double scaleY = ((ScaleTransform)MainBorder.LayoutTransform).ScaleY;
@@ -220,22 +266,23 @@ public class MainWindow : Window, IComponentConnector
 		}
 		else
 		{
-			if (base.ActualHeight > 110.0)
+			if (base.ActualHeight > 117.0)
 			{
 				_settings.ExpandedHeight = base.ActualHeight;
 			}
 			base.ResizeMode = ResizeMode.NoResize;
-			PreventMaximize();
-			base.MinHeight = 110.0;
+			base.MinHeight = 117.0;
 		}
-		double targetWindowHeight = (86.0 + num) * scaleY + 24.0;
+		double targetWindowHeight = (93.0 + num) * scaleY + 24.0;
 		if (_prefsExpanded && _settings.ExpandedHeight > 0.0)
 		{
 			targetWindowHeight = Math.Max(base.MinHeight, _settings.ExpandedHeight);
 		}
 		double value = (double.IsNaN(PrefsSection.Height) ? PrefsSection.ActualHeight : PrefsSection.Height);
-		BtnPrefs.Background = (_prefsExpanded ? ((SolidColorBrush)new BrushConverter().ConvertFrom("#2a9d8f")) : Brushes.Transparent);
-		DoubleAnimation animation = new DoubleAnimation(_prefsExpanded ? ((targetWindowHeight - 24.0) / scaleY - 86.0) : 0.0, TimeSpan.FromSeconds(0.3))
+		SolidColorBrush solidColorBrush = (SolidColorBrush)new BrushConverter().ConvertFrom("#2a9d8f");
+		BtnPrefs.Background = (_prefsExpanded ? solidColorBrush : Brushes.Transparent);
+		BtnPrefs.Resources["BtnHover"] = (_prefsExpanded ? ((SolidColorBrush)new BrushConverter().ConvertFrom("#42c2b1")) : ((SolidColorBrush)new BrushConverter().ConvertFrom("#3a3e5c")));
+		DoubleAnimation animation = new DoubleAnimation(_prefsExpanded ? ((targetWindowHeight - 24.0) / scaleY - 93.0) : 0.0, TimeSpan.FromSeconds(0.3))
 		{
 			From = value,
 			EasingFunction = new CubicEase
@@ -381,33 +428,45 @@ public class MainWindow : Window, IComponentConnector
 		_settings.UseCustomSpeed = true;
 		_settings.LoopContinuous = ChkContinuous.IsChecked == true;
 		_settings.AlwaysOnTop = ChkAlwaysOnTop.IsChecked == true;
-		if (double.TryParse(TxtPosX.Text, out var result3))
+		base.Topmost = _settings.AlwaysOnTop;
+		_settings.WaitConditionToRestart = BtnToggleRestrictedMode != null && BtnToggleRestrictedMode.Content.ToString().Contains("ON");
+		_settings.HideDeleteConfirmation = ChkShowConfirmations.IsChecked == false;
+		if (int.TryParse(TxtPollingInterval.Text.Trim(), out var result3))
+		{
+			if (result3 < 100)
+			{
+				result3 = 100;
+			}
+			_settings.ConditionsPollingInterval = result3;
+			TxtPollingInterval.Text = result3.ToString();
+		}
+		if (double.TryParse(TxtPosX.Text, out var result4))
 		{
 			double num = SystemParameters.VirtualScreenWidth - base.ActualWidth;
-			if (result3 < 0.0)
-			{
-				result3 = 0.0;
-			}
-			if (result3 > num)
-			{
-				result3 = Math.Max(0.0, num);
-			}
-			_settings.X = result3;
-			base.Left = result3;
-		}
-		if (double.TryParse(TxtPosY.Text, out var result4))
-		{
-			double num2 = SystemParameters.VirtualScreenHeight - base.ActualHeight;
 			if (result4 < 0.0)
 			{
 				result4 = 0.0;
 			}
-			if (result4 > num2)
+			if (result4 > num)
 			{
-				result4 = Math.Max(0.0, num2);
+				result4 = Math.Max(0.0, num);
 			}
-			_settings.Y = result4;
-			base.Top = result4;
+			_settings.X = result4;
+			base.Left = result4;
+		}
+		if (double.TryParse(TxtPosY.Text, out var result5))
+		{
+			double num2 = SystemParameters.VirtualScreenHeight - base.ActualHeight;
+			if (result5 < 0.0)
+			{
+				result5 = 0.0;
+			}
+			if (result5 > num2)
+			{
+				result5 = Math.Max(0.0, num2);
+			}
+			_settings.Y = result5;
+			base.Top = result5;
 		}
 		base.Topmost = _settings.AlwaysOnTop;
 		_macroService.RegisterHotkeys(_settings);
@@ -533,6 +592,10 @@ public class MainWindow : Window, IComponentConnector
 
 	private void BtnClose_Click(object sender, RoutedEventArgs e)
 	{
+		if (_isLoaded)
+		{
+			SaveSettingsFromUI();
+		}
 		Close();
 	}
 
@@ -577,29 +640,37 @@ public class MainWindow : Window, IComponentConnector
 
 	private void BtnClearMacro_Click(object sender, RoutedEventArgs e)
 	{
+		if (!_settings.HideDeleteConfirmation)
+		{
+			if (!ThemedConfirmWindow.Show(this, "Are you sure you want to clear the entire macro timeline?", out var dontAskAgain, "Clear"))
+			{
+				return;
+			}
+			if (dontAskAgain)
+			{
+				_settings.HideDeleteConfirmation = true;
+				ChkShowConfirmations.IsChecked = false;
+				_settings.Save();
+			}
+		}
 		_macroService.ClearEvents();
 		_macroName = "None";
 		MacroInfoSection.Visibility = Visibility.Collapsed;
 	}
 
-	private void Window_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+	private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
 	{
-		object originalSource = e.OriginalSource;
-		for (DependencyObject val = (DependencyObject)((originalSource is DependencyObject) ? originalSource : null); val != null; val = VisualTreeHelper.GetParent(val))
+		if (e.ChangedButton == MouseButton.Left)
 		{
-			if (val is System.Windows.Controls.Primitives.ButtonBase || val is System.Windows.Controls.TextBox || val is Thumb)
-			{
-				return;
-			}
+			DragMove();
 		}
-		DragMove();
 	}
 
 	protected override void OnMouseMove(System.Windows.Input.MouseEventArgs e)
 	{
-		//IL_0061: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0066: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_006c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0071: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0076: Unknown result type (might be due to invalid IL or missing references)
 		base.OnMouseMove(e);
 		FrameworkElement frameworkElement = Mouse.DirectlyOver as FrameworkElement;
 		string text = null;
@@ -616,9 +687,10 @@ public class MainWindow : Window, IComponentConnector
 		{
 			TxtHoverTooltip.Text = text;
 			HoverTooltip.IsOpen = true;
+			TxtHoverTooltip.UpdateLayout();
 			Point val = PointToScreen(e.GetPosition(this));
-			double num = (double)TxtHoverTooltip.Text.Length * 6.5 + 20.0;
-			double num2 = 28.0;
+			double num = TxtHoverTooltip.ActualWidth + 20.0;
+			double num2 = TxtHoverTooltip.ActualHeight + 12.0;
 			double num3 = val.X + 15.0;
 			double num4 = val.Y + 15.0;
 			if (num3 + num > SystemParameters.VirtualScreenWidth)
@@ -635,6 +707,33 @@ public class MainWindow : Window, IComponentConnector
 		else
 		{
 			HoverTooltip.IsOpen = false;
+		}
+	}
+
+	private void RefreshHoverTooltip(string newTip)
+	{
+		//IL_0055: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005a: Unknown result type (might be due to invalid IL or missing references)
+		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
+		if (HoverTooltip.IsOpen)
+		{
+			TxtHoverTooltip.Text = newTip;
+			TxtHoverTooltip.UpdateLayout();
+			double num = TxtHoverTooltip.ActualWidth + 20.0;
+			double num2 = TxtHoverTooltip.ActualHeight + 12.0;
+			Point val = PointToScreen(Mouse.GetPosition(this));
+			double num3 = val.X + 15.0;
+			double num4 = val.Y + 15.0;
+			if (num3 + num > SystemParameters.VirtualScreenWidth)
+			{
+				num3 = val.X - num - 5.0;
+			}
+			if (num4 + num2 > SystemParameters.VirtualScreenHeight)
+			{
+				num4 = val.Y - num2 - 5.0;
+			}
+			HoverTooltip.HorizontalOffset = num3;
+			HoverTooltip.VerticalOffset = num4;
 		}
 	}
 
@@ -808,12 +907,12 @@ public class MainWindow : Window, IComponentConnector
 		if (_prefsExpanded && !_isAnimatingHeight && e.HeightChanged)
 		{
 			_settings.ExpandedHeight = base.ActualHeight;
-			if (base.ActualHeight < 125.0 * scaleY && !_isAnimatingHeight)
+			if (base.ActualHeight < 116.0 * scaleY && !_isAnimatingHeight)
 			{
 				_prefsExpanded = false;
 				base.ResizeMode = ResizeMode.NoResize;
 				PreventMaximize();
-				base.MinHeight = 110.0 * scaleY;
+				base.MinHeight = 117.0 * scaleY;
 				PrefsSection.Height = 0.0;
 				BtnPrefs.Background = Brushes.Transparent;
 				_settings.Save();
@@ -855,6 +954,7 @@ public class MainWindow : Window, IComponentConnector
 	private void BtnMoveLeft_Click(object sender, RoutedEventArgs e)
 	{
 		base.Left = 0.0;
+		SaveQuickPos();
 	}
 
 	private void BtnMoveHCenter_Click(object sender, RoutedEventArgs e)
@@ -863,6 +963,7 @@ public class MainWindow : Window, IComponentConnector
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		Rect workArea = SystemParameters.WorkArea;
 		base.Left = (workArea.Width - base.ActualWidth) / 2.0;
+		SaveQuickPos();
 	}
 
 	private void BtnMoveRight_Click(object sender, RoutedEventArgs e)
@@ -871,11 +972,13 @@ public class MainWindow : Window, IComponentConnector
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		Rect workArea = SystemParameters.WorkArea;
 		base.Left = workArea.Width - base.ActualWidth;
+		SaveQuickPos();
 	}
 
 	private void BtnMoveTop_Click(object sender, RoutedEventArgs e)
 	{
 		base.Top = 0.0;
+		SaveQuickPos();
 	}
 
 	private void BtnMoveVCenter_Click(object sender, RoutedEventArgs e)
@@ -884,6 +987,7 @@ public class MainWindow : Window, IComponentConnector
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		Rect workArea = SystemParameters.WorkArea;
 		base.Top = (workArea.Height - base.ActualHeight) / 2.0;
+		SaveQuickPos();
 	}
 
 	private void BtnMoveBottom_Click(object sender, RoutedEventArgs e)
@@ -892,6 +996,18 @@ public class MainWindow : Window, IComponentConnector
 		//IL_0006: Unknown result type (might be due to invalid IL or missing references)
 		Rect workArea = SystemParameters.WorkArea;
 		base.Top = workArea.Height - base.ActualHeight;
+		SaveQuickPos();
+	}
+
+	private async void SaveQuickPos()
+	{
+		_originalTopBeforeExpand = double.NaN;
+		_positionChangedWhileExpanded = true;
+		await Task.Delay(50);
+		_settings.X = base.Left;
+		_settings.Y = base.Top;
+		UpdatePositionUI();
+		_settings.Save();
 	}
 
 	private void BtnResetSpeed_Click(object sender, RoutedEventArgs e)
@@ -951,26 +1067,9 @@ public class MainWindow : Window, IComponentConnector
 			if (settings != null)
 			{
 				_settings = settings;
-				TxtRecHotkey.Text = _settings.RecHotkey;
-				TxtPlayHotkey.Text = _settings.PlayHotkey;
-				TxtLoopCount.Text = _settings.LoopCount.ToString();
-				TxtSpeed.Text = _settings.CustomSpeed.ToString();
-				ChkContinuous.IsChecked = _settings.LoopContinuous;
-				ChkAlwaysOnTop.IsChecked = _settings.AlwaysOnTop;
-				if (_settings.X >= 0.0)
-				{
-					base.Left = _settings.X;
-					TxtPosX.Text = ((int)base.Left).ToString();
-				}
-				if (_settings.Y >= 0.0)
-				{
-					base.Top = _settings.Y;
-					TxtPosY.Text = ((int)base.Top).ToString();
-				}
-				base.Topmost = _settings.AlwaysOnTop;
+				LoadSettingsToUI();
 				_macroService.RegisterHotkeys(_settings);
 				_settings.Save();
-				UpdatePrefUIState();
 				ShowNotification("Settings Imported");
 			}
 		}
@@ -983,6 +1082,174 @@ public class MainWindow : Window, IComponentConnector
 	private void NumberOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
 	{
 		e.Handled = !NumberOnlyRegex.IsMatch(e.Text);
+	}
+
+	private void BtnToggleMatchLogic_Click(object sender, RoutedEventArgs e)
+	{
+		_settings.MatchAllConditions = !_settings.MatchAllConditions;
+		string text = (_settings.MatchAllConditions ? "Macro restarts only when ALL enabled\nconditions are met." : "Macro restarts when ANY enabled condition is met.");
+		if (BtnToggleMatchLogic != null)
+		{
+			BtnToggleMatchLogic.Content = (_settings.MatchAllConditions ? "Match: ALL" : "Match: ANY");
+			BtnToggleMatchLogic.Tag = text;
+			RefreshHoverTooltip(text);
+		}
+		SaveSettingsFromUI();
+	}
+
+	private void BtnToggleRestartMode_Click(object sender, RoutedEventArgs e)
+	{
+		_settings.UseSmartRestart = !_settings.UseSmartRestart;
+		string text = (_settings.UseSmartRestart ? "Once the condition is met, the macro will wait\nfor it to disappear before allowing further restarts." : "Triggers instantly and repeatedly as long as condition is met.");
+		if (BtnToggleRestartMode != null)
+		{
+			BtnToggleRestartMode.Content = (_settings.UseSmartRestart ? "Logic: SEQUENTIAL" : "Logic: REPETITIVE");
+			BtnToggleRestartMode.Tag = text;
+			RefreshHoverTooltip(text);
+		}
+		SaveSettingsFromUI();
+	}
+
+	private void BtnToggleRestrictedMode_Click(object sender, RoutedEventArgs e)
+	{
+		_settings.WaitConditionToRestart = !_settings.WaitConditionToRestart;
+		string text = (_settings.WaitConditionToRestart ? "Macro pauses at the end of the timeline\nand waits for conditions before looping." : "Macro loops naturally regardless of conditions.");
+		if (BtnToggleRestrictedMode != null)
+		{
+			BtnToggleRestrictedMode.Content = (_settings.WaitConditionToRestart ? "Restricted: ON" : "Restricted: OFF");
+			BtnToggleRestrictedMode.Tag = text;
+			RefreshHoverTooltip(text);
+		}
+		SaveSettingsFromUI();
+	}
+
+	private void RefreshConditionsList()
+	{
+		if (ListConditions != null)
+		{
+			ListConditions.ItemsSource = null;
+			ListConditions.ItemsSource = _settings.RestartConditions;
+		}
+	}
+
+	private void ConditionCard_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+	{
+		if (sender is FrameworkElement { DataContext: RestartCondition dataContext })
+		{
+			dataContext.IsEnabled = !dataContext.IsEnabled;
+			SaveSettingsFromUI();
+			RefreshConditionsList();
+			e.Handled = true;
+		}
+	}
+
+	private void BtnAddCondition_Click(object sender, RoutedEventArgs e)
+	{
+		if (_addWindow != null)
+		{
+			if (_addWindow.WindowState == WindowState.Minimized)
+			{
+				_addWindow.WindowState = WindowState.Normal;
+			}
+			_addWindow.Activate();
+			return;
+		}
+		_addWindow = new ConditionEditorWindow(new RestartCondition(), "Add Condition", (string name) => IsNameDuplicate(name, null));
+		_addWindow.Owner = this;
+		_addWindow.Closed += delegate(object? s, EventArgs args)
+		{
+			ConditionEditorWindow conditionEditorWindow = (ConditionEditorWindow)s;
+			if (conditionEditorWindow.IsSaved)
+			{
+				if (_settings.RestartConditions == null)
+				{
+					_settings.RestartConditions = new List<RestartCondition>();
+				}
+				_settings.RestartConditions.Add(conditionEditorWindow.Condition);
+				SaveSettingsFromUI();
+				RefreshConditionsList();
+			}
+			_addWindow = null;
+		};
+		_addWindow.Show();
+	}
+
+	private void BtnEditCondition_Click(object sender, RoutedEventArgs e)
+	{
+		if (!(sender is FrameworkElement { DataContext: var dataContext }))
+		{
+			return;
+		}
+		RestartCondition cond = dataContext as RestartCondition;
+		if (cond == null)
+		{
+			return;
+		}
+		if (_editWindows.TryGetValue(cond, out ConditionEditorWindow value))
+		{
+			if (value.WindowState == WindowState.Minimized)
+			{
+				value.WindowState = WindowState.Normal;
+			}
+			value.Activate();
+			return;
+		}
+		ConditionEditorWindow conditionEditorWindow = new ConditionEditorWindow(cond, "Edit Condition", (string name) => IsNameDuplicate(name, cond));
+		conditionEditorWindow.Owner = this;
+		_editWindows[cond] = conditionEditorWindow;
+		conditionEditorWindow.Closed += delegate(object? s, EventArgs args)
+		{
+			if (((ConditionEditorWindow)s).IsSaved)
+			{
+				SaveSettingsFromUI();
+				RefreshConditionsList();
+			}
+			_editWindows.Remove(cond);
+		};
+		conditionEditorWindow.Show();
+		e.Handled = true;
+	}
+
+	private bool IsNameDuplicate(string name, RestartCondition current)
+	{
+		if (_settings.RestartConditions == null)
+		{
+			return false;
+		}
+		foreach (RestartCondition restartCondition in _settings.RestartConditions)
+		{
+			if (restartCondition != current && restartCondition.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void BtnDeleteCondition_Click(object sender, RoutedEventArgs e)
+	{
+		if (!(sender is FrameworkElement { DataContext: RestartCondition dataContext }))
+		{
+			return;
+		}
+		bool flag = _settings.HideDeleteConfirmation;
+		if (!flag)
+		{
+			flag = ThemedConfirmWindow.Show(this, "Are you sure you want to delete the condition \"" + dataContext.Name + "\"?", out var dontAskAgain);
+			if (dontAskAgain && flag)
+			{
+				_settings.HideDeleteConfirmation = true;
+				ChkShowConfirmations.IsChecked = false;
+				_settings.Save();
+			}
+		}
+		if (flag)
+		{
+			_settings.RestartConditions.Remove(dataContext);
+			SaveSettingsFromUI();
+			RefreshConditionsList();
+		}
+		e.Handled = true;
 	}
 
 	[DebuggerNonUserCode]
@@ -1005,7 +1272,6 @@ public class MainWindow : Window, IComponentConnector
 		switch (connectionId)
 		{
 		case 1:
-			((MainWindow)target).PreviewMouseLeftButtonDown += Window_PreviewMouseLeftButtonDown;
 			((MainWindow)target).Closing += Window_Closing;
 			((MainWindow)target).LocationChanged += Window_LocationChanged;
 			((MainWindow)target).StateChanged += Window_StateChanged;
@@ -1033,141 +1299,196 @@ public class MainWindow : Window, IComponentConnector
 			MainWindowGrid = (Grid)target;
 			break;
 		case 9:
-			BtnMinimize = (System.Windows.Controls.Button)target;
-			BtnMinimize.Click += BtnMinimize_Click;
+			((Grid)target).MouseLeftButtonDown += TitleBar_MouseLeftButtonDown;
 			break;
 		case 10:
-			BtnCreativeClose = (System.Windows.Controls.Button)target;
-			BtnCreativeClose.Click += BtnClose_Click;
+			((System.Windows.Controls.Button)target).Click += BtnMinimize_Click;
 			break;
 		case 11:
-			((ScrollViewer)target).PreviewMouseWheel += ScrollViewer_PreviewMouseWheel;
+			((System.Windows.Controls.Button)target).Click += BtnClose_Click;
 			break;
 		case 12:
+			((ScrollViewer)target).PreviewMouseWheel += ScrollViewer_PreviewMouseWheel;
+			break;
+		case 13:
 			BtnLoad = (System.Windows.Controls.Button)target;
 			BtnLoad.Click += BtnLoad_Click;
 			break;
-		case 13:
+		case 14:
 			BtnSave = (System.Windows.Controls.Button)target;
 			BtnSave.Click += BtnSave_Click;
 			break;
-		case 14:
+		case 15:
 			BtnRec = (System.Windows.Controls.Button)target;
 			BtnRec.Click += BtnRec_Click;
 			break;
-		case 15:
+		case 16:
 			RecIndicator = (Ellipse)target;
 			break;
-		case 16:
+		case 17:
 			BtnPlay = (System.Windows.Controls.Button)target;
 			BtnPlay.Click += BtnPlay_Click;
 			break;
-		case 17:
+		case 18:
 			PlayIndicator = (Polygon)target;
 			break;
-		case 18:
+		case 19:
 			BtnPrefs = (System.Windows.Controls.Button)target;
 			BtnPrefs.Click += BtnTogglePrefs_Click;
 			break;
-		case 19:
+		case 20:
 			PrefsSection = (Grid)target;
 			break;
-		case 20:
+		case 21:
 			PrefsScrollViewer = (ScrollViewer)target;
 			break;
-		case 21:
+		case 22:
 			PrefsInnerGrid = (Grid)target;
 			break;
-		case 22:
+		case 23:
 			GenericSection = (Border)target;
 			break;
-		case 23:
+		case 24:
 			MacroInfoSection = (Grid)target;
 			break;
-		case 24:
+		case 25:
 			TxtMacroInfo = (TextBlock)target;
 			break;
-		case 25:
+		case 26:
 			BtnClearMacro = (System.Windows.Controls.Button)target;
 			BtnClearMacro.Click += BtnClearMacro_Click;
 			break;
-		case 26:
+		case 27:
 			ChkAlwaysOnTop = (System.Windows.Controls.CheckBox)target;
 			ChkAlwaysOnTop.Checked += PrefsChanged;
 			ChkAlwaysOnTop.Unchecked += PrefsChanged;
 			break;
-		case 27:
+		case 28:
+			ChkShowConfirmations = (System.Windows.Controls.CheckBox)target;
+			ChkShowConfirmations.Checked += PrefsChanged;
+			ChkShowConfirmations.Unchecked += PrefsChanged;
+			break;
+		case 29:
 			ChkContinuous = (System.Windows.Controls.CheckBox)target;
 			ChkContinuous.Checked += PrefsChanged;
 			ChkContinuous.Unchecked += PrefsChanged;
 			break;
-		case 28:
+		case 30:
 			TxtLoopCount = (System.Windows.Controls.TextBox)target;
 			TxtLoopCount.LostFocus += PrefsChanged;
 			TxtLoopCount.PreviewTextInput += NumberOnly_PreviewTextInput;
 			break;
-		case 29:
+		case 31:
 			BtnResetSpeed = (System.Windows.Controls.Button)target;
 			BtnResetSpeed.Click += BtnResetSpeed_Click;
 			break;
-		case 30:
+		case 32:
 			TxtSpeed = (System.Windows.Controls.TextBox)target;
 			TxtSpeed.LostFocus += PrefsChanged;
 			TxtSpeed.PreviewTextInput += NumberOnly_PreviewTextInput;
 			break;
-		case 31:
+		case 33:
 			HotkeysBorder = (Border)target;
 			break;
-		case 32:
+		case 34:
 			TxtRecHotkey = (System.Windows.Controls.TextBox)target;
 			TxtRecHotkey.GotFocus += TxtHotkey_GotFocus;
 			TxtRecHotkey.PreviewKeyDown += TxtHotkey_PreviewKeyDown;
 			TxtRecHotkey.LostFocus += TxtHotkey_LostFocus;
 			break;
-		case 33:
+		case 35:
 			TxtPlayHotkey = (System.Windows.Controls.TextBox)target;
 			TxtPlayHotkey.GotFocus += TxtHotkey_GotFocus;
 			TxtPlayHotkey.PreviewKeyDown += TxtHotkey_PreviewKeyDown;
 			TxtPlayHotkey.LostFocus += TxtHotkey_LostFocus;
 			break;
-		case 34:
+		case 36:
+			BtnConditionHelp = (System.Windows.Controls.Button)target;
+			break;
+		case 37:
+			BtnToggleMatchLogic = (System.Windows.Controls.Button)target;
+			BtnToggleMatchLogic.Click += BtnToggleMatchLogic_Click;
+			break;
+		case 38:
+			BtnToggleRestartMode = (System.Windows.Controls.Button)target;
+			BtnToggleRestartMode.Click += BtnToggleRestartMode_Click;
+			break;
+		case 39:
+			BtnToggleRestrictedMode = (System.Windows.Controls.Button)target;
+			BtnToggleRestrictedMode.Click += BtnToggleRestrictedMode_Click;
+			break;
+		case 40:
+			TxtPollingInterval = (System.Windows.Controls.TextBox)target;
+			TxtPollingInterval.LostFocus += PrefsChanged;
+			TxtPollingInterval.PreviewTextInput += NumberOnly_PreviewTextInput;
+			break;
+		case 41:
+			ListConditions = (ItemsControl)target;
+			break;
+		case 46:
+			((System.Windows.Controls.Button)target).Click += BtnAddCondition_Click;
+			break;
+		case 47:
 			TxtPosX = (System.Windows.Controls.TextBox)target;
 			TxtPosX.LostFocus += PrefsChanged;
 			break;
-		case 35:
+		case 48:
 			TxtPosY = (System.Windows.Controls.TextBox)target;
 			TxtPosY.LostFocus += PrefsChanged;
 			break;
-		case 36:
+		case 49:
 			((System.Windows.Controls.Button)target).Click += BtnMoveLeft_Click;
 			break;
-		case 37:
+		case 50:
 			((System.Windows.Controls.Button)target).Click += BtnMoveHCenter_Click;
 			break;
-		case 38:
+		case 51:
 			((System.Windows.Controls.Button)target).Click += BtnMoveRight_Click;
 			break;
-		case 39:
+		case 52:
 			((System.Windows.Controls.Button)target).Click += BtnMoveTop_Click;
 			break;
-		case 40:
+		case 53:
 			((System.Windows.Controls.Button)target).Click += BtnMoveVCenter_Click;
 			break;
-		case 41:
+		case 54:
 			((System.Windows.Controls.Button)target).Click += BtnMoveBottom_Click;
 			break;
-		case 42:
+		case 55:
 			((System.Windows.Controls.Button)target).Click += BtnImportSettings_Click;
 			break;
-		case 43:
+		case 56:
 			((System.Windows.Controls.Button)target).Click += BtnExportSettings_Click;
 			break;
-		case 44:
+		case 57:
 			GlobalOverlay = (Border)target;
 			GlobalOverlay.MouseLeftButtonDown += Overlay_MouseLeftButtonDown;
 			break;
 		default:
 			_contentLoaded = true;
+			break;
+		}
+	}
+
+	[DebuggerNonUserCode]
+	[GeneratedCode("PresentationBuildTasks", "9.0.12.0")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	void IStyleConnector.Connect(int connectionId, object target)
+	{
+		switch (connectionId)
+		{
+		case 42:
+			((Border)target).MouseLeftButtonDown += ConditionCard_MouseLeftButtonDown;
+			break;
+		case 43:
+			((System.Windows.Controls.CheckBox)target).Checked += PrefsChanged;
+			((System.Windows.Controls.CheckBox)target).Unchecked += PrefsChanged;
+			break;
+		case 44:
+			((System.Windows.Controls.Button)target).Click += BtnEditCondition_Click;
+			break;
+		case 45:
+			((System.Windows.Controls.Button)target).Click += BtnDeleteCondition_Click;
 			break;
 		}
 	}
