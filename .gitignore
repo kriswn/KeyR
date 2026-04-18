@@ -5,7 +5,7 @@ obj/
 *.suo
 *.pdb
 
-website/
+
 Create-Release.bat
 FixWebsite.py
 *.py
