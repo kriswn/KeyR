@@ -290,11 +290,19 @@ public class MacroService : IDisposable
 					long num5 = num3 - stopwatch.ElapsedMilliseconds;
 					if (num5 > 15)
 					{
-						Thread.Sleep((int)(num5 - 10));
+						token.WaitHandle.WaitOne((int)(num5 - 10));
+						if (token.IsCancellationRequested)
+						{
+							break;
+						}
 					}
-					while (stopwatch.ElapsedMilliseconds < num3)
+					while (stopwatch.ElapsedMilliseconds < num3 && !token.IsCancellationRequested)
 					{
 						Thread.SpinWait(100);
+					}
+					if (token.IsCancellationRequested)
+					{
+						break;
 					}
 					if (@event.Type == EventType.MouseEvent)
 					{

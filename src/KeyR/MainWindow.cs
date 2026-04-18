@@ -749,6 +749,7 @@ public class MainWindow : Window, IComponentConnector
 			_settings.X = base.Left;
 			_settings.Y = base.Top;
 			UpdatePositionUI();
+			_settings.Save();
 		}
 	}
 
