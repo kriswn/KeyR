@@ -1225,9 +1225,9 @@
                 Capture mouse and keyboard actions, then replay them at any speed — zero scripting, zero setup.
             </p>
             <div class="hero__actions">
-                <a href="downloads/KeyR_v0.3.4_win_x64.exe" class="btn btn--primary" download data-version="v0_3_4" onclick="checkOS(event)">
+                <a href="downloads/KeyR_v0.4.0_win_x64.exe" class="btn btn--primary" download data-version="v0_4_0" onclick="checkOS(event)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download Beta v0.3.4
+                    Download Stable v0.4.0
                 </a>
                 <a href="#downloads" class="btn btn--secondary">
                     All Releases
@@ -1294,12 +1294,38 @@
                             <p class="channel__desc">Stable Releases</p>
                         </div>
                     </div>
+                    
                     <div class="channel__list" id="stable-list">
-                        <div class="empty-state">
-                            <p class="empty-state__icon">📦</p>
-                            <p class="empty-state__text">No stable releases yet. Check back soon!</p>
+                        <div class="release release--collapsible release--latest" style="cursor: pointer;">
+                            <div class="release__toggle" aria-expanded="true">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="release__version">v0.4.0</span>
+                                    <span class="release__tag release__tag--latest">LATEST STABLE</span>
+                                </div>
+                                <svg class="release__toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <p class="release__meta">April 18, 2026 &middot; ~650 KB &middot; Windows x64</p>
+                            
+                            <div class="collapse-content expanded">
+                                <div>
+                                    <div class="release__notes">
+                                        <h4>Dynamic Centroid Engine (InformaalTask Fix)</h4>
+                                        <ul>
+                                            <li>Fixed critical offset bug when importing InformaalTask foreign macros.</li>
+                                            <li>Engine now maps pure relative zero-based macro grids perfectly onto physical desktop centers dynamically.</li>
+                                            <li>Added native algorithmic geometry scaling ensuring accurate coordinate bounds without physical distortion.</li>
+                                            <li>Official Stable Promotion of the overhauled .NET 9 Win32 engine.</li>
+                                        </ul>
+                                    </div>
+                                    <a href="downloads/KeyR_v0.4.0_win_x64.exe" class="btn btn--download" download data-version="v0_4_0" onclick="checkOS(event)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        Download v0.4.0 Stable
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
                 </div>
 
                 <!-- Beta Channel -->
@@ -1334,7 +1360,7 @@
                                             <li>Added native algorithmic geometry scaling ensuring accurate coordinate bounds without physical distortion.</li>
                                         </ul>
                                     </div>
-                                    <a href="downloads/KeyR_v0.3.4_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_3_4" onclick="checkOS(event)">
+                                    <a href="downloads/KeyR_v0.4.0_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_4_0" onclick="checkOS(event)">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                         Download v0.3.4 Beta
                                     </a>
@@ -1362,7 +1388,7 @@
                                             <li>Added Missing Requirements themed dynamic user interface via Windows APIs.</li>
                                         </ul>
                                     </div>
-                                    <a href="downloads/KeyR_v0.3.4_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_3_4" onclick="checkOS(event)">
+                                    <a href="downloads/KeyR_v0.4.0_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_4_0" onclick="checkOS(event)">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                         Download v0.3.3 Beta
                                     </a>

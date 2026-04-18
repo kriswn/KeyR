@@ -397,7 +397,8 @@
                 <a href="index.html">Home</a>
                 <div class="nav__divider"></div>
                 <div class="nav__scroll-area" id="navScrollArea">
-                    <a href="#v33">v0.3.3</a>
+                    <a href="#v34">v0.3.4</a>
+                      <a href="#v33">v0.3.3</a>
                     <a href="#v32">v0.3.2</a>
                     <a href="#v31">v0.3.1</a>
                     <a href="#v30">v0.3.0</a>
@@ -691,7 +692,27 @@
             </div>
         </section>
 
-        <section id="v33" class="doc-section fade-in">
+        
+          <section id="v34" class="doc-section fade-in">
+              <span class="doc-section__version">v0.3.4 (Centroid Mapping)</span>
+              <h2 class="doc-section__title">Foreign Macro Upgrades</h2>
+              <div class="doc-section__content">
+                  <p>In version 0.3.4, the import engine for external macros received a profound mathematical overhaul.</p>
+                  
+                  <div class="feature-list">
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">Dynamic Bounding Box Centroids</span>
+                          <span class="feature-list__desc">InformaalTask recordings natively save zero-based relative grids mapped strictly to the active cursor. Our engine now intelligently infers these relative geometries and instantly applies geometric offsets, centering your foreign macro perfectly onto the middle of the physical desktop during playback, negating any boundary clipping.</span>
+                      </div>
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">Zero-Distortion Fallbacks</span>
+                          <span class="feature-list__desc">Scale normalizers were removed for dimensions below 1080p, preventing extreme multiplier morphing when rendering very tiny localized shapes.</span>
+                      </div>
+                  </div>
+              </div>
+          </section>
+
+          <section id="v33" class="doc-section fade-in">
             <span class="doc-section__version">v0.3.3 Beta (.NET Bootstrapper)</span>
             <h2 class="doc-section__title">Dependency Checks</h2>
             <div class="doc-section__content">
@@ -723,7 +744,8 @@
             <div class="sidebar__divider" style="flex-shrink: 0;"></div>
             
             <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none;">
-                <a href="#v33" class="sidebar__link" onclick="closeSidebar()">v0.3.3 (Checks)</a>
+                <a href="#v34" class="sidebar__link" onclick="closeSidebar()">v0.3.4 (Centroid)</a>
+                  <a href="#v33" class="sidebar__link" onclick="closeSidebar()">v0.3.3 (Checks)</a>
                 <a href="#v32" class="sidebar__link" onclick="closeSidebar()">v0.3.2 (Engine)</a>
                 <a href="#v31" class="sidebar__link" onclick="closeSidebar()">v0.3.1 (QoL)</a>
                 <a href="#v30" class="sidebar__link" onclick="closeSidebar()">v0.3.0 (Aesthetics)</a>
