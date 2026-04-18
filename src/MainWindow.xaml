@@ -4,7 +4,7 @@
         Title="KeyR" Height="117" Width="300" MinWidth="300" MaxWidth="300" MinHeight="117" MaxHeight="117"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ResizeMode="NoResize"
-        Icon="appIcon.ico"
+        Icon="pack://application:,,,/appIcon.ico"
         Closing="Window_Closing"
         LocationChanged="Window_LocationChanged"
         StateChanged="Window_StateChanged">
@@ -49,23 +49,24 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource ThemeTextMuted}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="28"/>
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="6,1">
-                            <Rectangle Width="8" Height="1.2" Fill="{TemplateBinding Foreground}" Margin="0,10,0,0"/>
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource ThemeBtnHover}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeHoverText}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource ThemeHoverBg}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource ThemeHoverText}"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
         <Style TargetType="Button" x:Key="CloseBtn" BasedOn="{StaticResource HeaderBtn}">
@@ -128,14 +129,16 @@
                     </Grid.ColumnDefinitions>
                     
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
-                        <TextBlock x:Name="TxtTitleName" Text="KeyR" Foreground="{DynamicResource ThemeTextMuted}" FontSize="13" FontWeight="Bold" Opacity="0.8" MaxWidth="140" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock x:Name="TxtTitleName" Text="KeyR" Foreground="{DynamicResource ThemeTextMuted}" FontSize="13" FontWeight="ExtraBold" MaxWidth="140" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,2,0">
                         <TextBlock x:Name="TxtTitleDuration" Text="" Foreground="{DynamicResource ThemeTextDim}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0.9"/>
-                        <Button Style="{StaticResource HeaderBtn}" Click="BtnMinimize_Click" Tag="Minimize" Margin="0,0,2,0"/>
+                        <Button Style="{StaticResource HeaderBtn}" Click="BtnMinimize_Click" Tag="Minimize">
+                            <Path Data="M4,11 h16 v3 h-16 Z" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="12" Height="3" Stretch="Uniform"/>
+                        </Button>
                         <Button Style="{StaticResource CloseBtn}" Click="BtnClose_Click" Tag="Close">
-                            <TextBlock Text="✕" FontSize="11"/>
+                            <Path Data="M19,6.41L17.59,5,12,10.59,6.41,5,5,6.41,10.59,12,5,17.59,6.41,19,12,13.41,17.59,19,19,17.59,13.41,12,19,6.41Z" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.5" Width="10" Height="10" Stretch="Uniform"/>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -144,21 +147,38 @@
                 <Grid Grid.Row="1" Margin="0,0,0,3">
                     <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" PanningMode="HorizontalOnly" PanningDeceleration="0.001" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Button x:Name="BtnLoad" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnLoad_Click" Tag="Load" Content="📂"/>
-                            <Button x:Name="BtnSave" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnSave_Click" Tag="Save" Margin="2,0,0,0" Content="💾"/>
+                            <Button x:Name="BtnLoad" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnLoad_Click" Tag="Load">
+                                <Path Data="M3,7a2,2,0,0,1,2-2H9.17a2,2,0,0,1,1.41.59L12.17,7H19a2,2,0,0,1,2,2V17a2,2,0,0,1-2,2H5a2,2,0,0,1-2-2Z" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="16" Height="14" Stretch="Uniform" Opacity="0.9"/>
+                            </Button>
+                            <Button x:Name="BtnSave" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnSave_Click" Tag="Save" Margin="2,0,0,0">
+                                <Path Data="M19,21H5a2,2,0,0,1-2-2V5A2,2,0,0,1,5,3H15.17L21,8.83V19A2,2,0,0,1,19,21ZM12,12a3,3,0,1,0,3,3A3,3,0,0,0,12,12ZM7,5V9h7V5Z" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="16" Height="16" Stretch="Uniform" Opacity="0.9"/>
+                            </Button>
 
                             <Rectangle Width="1" Height="24" Fill="{DynamicResource ThemeDivider}" Margin="6,0"/>
 
-                            <Button x:Name="BtnRec" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnRec_Click" Tag="Record">
-                                <Ellipse x:Name="RecIndicator" Width="10" Height="10" Fill="{DynamicResource ThemeDanger}"/>
-                            </Button>
+                            <Grid>
+                                <Button x:Name="BtnRec" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnRec_Click" Tag="Record">
+                                    <Path x:Name="RecIndicator" Data="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Z" Fill="{DynamicResource ThemeDanger}" Width="16" Height="16" Stretch="Uniform"/>
+                                </Button>
+                                <Button x:Name="BtnPause" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnPause_Click" Tag="Pause" Visibility="Collapsed">
+                                    <Grid Width="14" Height="14">
+                                        <Rectangle Width="5" Height="14" Fill="#FFCC00" HorizontalAlignment="Left" RadiusX="2" RadiusY="2"/>
+                                        <Rectangle Width="5" Height="14" Fill="#FFCC00" HorizontalAlignment="Right" RadiusX="2" RadiusY="2"/>
+                                    </Grid>
+                                </Button>
+                            </Grid>
+
                             <Button x:Name="BtnPlay" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnPlay_Click" Tag="Play" Margin="2,0,0,0">
-                                <Polygon x:Name="PlayIndicator" Points="0,0 0,10 8,5" Fill="{DynamicResource ThemeAccent}" Margin="2,0,0,0"/>
+                                <Path x:Name="PlayIndicator" Data="M19,10.63L7.1,3.23C5.7,2.36,3.9,3.37,3.9,5.03V19.83c0,1.66,1.8,2.67,3.2,1.8l11.9-7.4C20.3,13.38,20.3,11.45,19,10.63Z" Fill="#2ECC71" Width="14" Height="14" Stretch="Uniform" Margin="2,0,0,0"/>
                             </Button>
 
                             <Rectangle Width="1" Height="24" Fill="{DynamicResource ThemeDivider}" Margin="6,0"/>
                             <Button x:Name="BtnPrefs" Width="40" Height="40" Style="{StaticResource CardBtn}" Click="BtnOpenSettings_Click" Tag="Settings">
-                                <TextBlock Text="⚙️" FontSize="14" Margin="0,1,0,0"/>
+                                <Path Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11.03L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11.03C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.04 4.95,18.95L7.44,17.95C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.95L19.05,18.95C19.27,19.04 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" 
+                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" 
+                                      Width="18" Height="18" Stretch="Uniform" Opacity="0.9"
+                                      VerticalAlignment="Center" HorizontalAlignment="Center"
+                                      SnapsToDevicePixels="False" UseLayoutRounding="True"/>
                             </Button>
                         </StackPanel>
                     </ScrollViewer>

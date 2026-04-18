@@ -60,6 +60,7 @@ namespace KeyR
 
         private Action _recAction;
         private Action _playAction;
+        private Action _pauseAction;
 
         private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
         private const long MAX_RECORDING_MS = 99 * 3600 * 1000L; // 99 hours
@@ -154,8 +155,10 @@ namespace KeyR
 
         private string _recHotkey;
         private string _playHotkey;
+        private string _pauseHotkey;
         private string _recKeyOnly;
         private string _playKeyOnly;
+        private string _pauseKeyOnly;
 
         private Settings _currentSettings;
 
@@ -164,15 +167,20 @@ namespace KeyR
             _currentSettings = settings;
             _recHotkey = settings.RecHotkey;
             _playHotkey = settings.PlayHotkey;
+            _pauseHotkey = string.IsNullOrWhiteSpace(settings.PauseHotkey) ? "F12" : settings.PauseHotkey;
             
-            _recKeyOnly = _recHotkey.Split('+').Last();
-            _playKeyOnly = _playHotkey.Split('+').Last();
+            _recKeyOnly = _recHotkey?.Split('+').Last();
+            _playKeyOnly = _playHotkey?.Split('+').Last();
+            _pauseKeyOnly = _pauseHotkey?.Split('+').Last();
 
             _recAction = () => { System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => ToggleRecord(settings))); };
             _playAction = () => {
                 // If already playing, stop IMMEDIATELY on this thread
-                if (_isPlaying) { StopPlaying(); return; }
+                if (_isPlaying && !_isPaused) { StopPlaying(); return; }
                 System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => TogglePlay(settings)));
+            };
+            _pauseAction = () => {
+                if (_isPlaying) { System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => TogglePause())); }
             };
         }
 
@@ -201,12 +209,22 @@ namespace KeyR
                 e.Handled = true;
                 _playAction?.Invoke();
             }
+            else if (pressed == _pauseHotkey)
+            {
+                e.Handled = true;
+                _pauseAction?.Invoke();
+            }
             // During playback, be more lenient to stop (match base key)
             // This fixes the "multiple tries to stop" issue if modifiers are stuck
             else if (_isPlaying && e.KeyCode.ToString() == _playKeyOnly)
             {
                 e.Handled = true;
                 _playAction?.Invoke();
+            }
+            else if (_isPlaying && e.KeyCode.ToString() == _pauseKeyOnly)
+            {
+                e.Handled = true;
+                _pauseAction?.Invoke();
             }
         }
 
@@ -220,6 +238,23 @@ namespace KeyR
         {
             if (_isPlaying) StopPlaying();
             else StartPlaying(settings);
+        }
+
+        private volatile bool _isPaused;
+        public bool IsPaused { get => _isPaused; set => _isPaused = value; }
+
+        public void TogglePause()
+        {
+            if (!_isPlaying) return;
+            _isPaused = !_isPaused;
+            if (_isPaused)
+            {
+                OnStatusChanged?.Invoke("Paused", false, true);
+            }
+            else
+            {
+                OnStatusChanged?.Invoke("Playing", false, true);
+            }
         }
 
         // ── Recording via Raw Low-Level Hooks ──
@@ -399,6 +434,33 @@ namespace KeyR
                 _events.RemoveAt(_events.Count - 1); 
                 if (_events.Count > 0) _events.RemoveAt(_events.Count - 1);
             }
+            else if (_events.Count > 0 && _events.Last().Type == EventType.MouseEvent)
+            {
+                // Strip trailing mouse clicks (from clicking the Record button to stop)
+                // Remove trailing moves first
+                while (_events.Count > 0 && _events.Last().Type == EventType.MouseEvent && _events.Last().Button == "Move")
+                {
+                    _events.RemoveAt(_events.Count - 1);
+                }
+                
+                // If the last is now a Left MouseUp, remove the whole click sequence
+                if (_events.Count > 0 && _events.Last().Type == EventType.MouseEvent && _events.Last().Button == "Left" && !_events.Last().IsDown)
+                {
+                    _events.RemoveAt(_events.Count - 1); // Remove Up
+                    
+                    // Remove any moves in between (though unlikely during a click)
+                    while (_events.Count > 0 && _events.Last().Type == EventType.MouseEvent && _events.Last().Button == "Move")
+                    {
+                        _events.RemoveAt(_events.Count - 1);
+                    }
+                    
+                    // Remove Down
+                    if (_events.Count > 0 && _events.Last().Type == EventType.MouseEvent && _events.Last().Button == "Left" && _events.Last().IsDown)
+                    {
+                        _events.RemoveAt(_events.Count - 1);
+                    }
+                }
+            }
 
             OnStatusChanged?.Invoke($"Stored {_events.Count} acts", false, false);
         }
@@ -431,6 +493,7 @@ namespace KeyR
             if (_isRecording || _events.Count == 0) return;
             
             _isPlaying = true;
+            _isPaused = false;
             _restartRequested = false;
             _playCts = new CancellationTokenSource();
             BypassInput.InvalidateScreenCache();
@@ -467,6 +530,7 @@ namespace KeyR
             if (!_isPlaying) return;
             
             _isPlaying = false;
+            _isPaused = false;
             try { _playCts?.Cancel(); } catch { }
             try { _engine?.Stop(); } catch { }
             _engine = null;
@@ -515,6 +579,18 @@ namespace KeyR
                         while (true)
                         {
                             if (token.IsCancellationRequested) return; // Immediate Breakout Guarantee
+
+                            if (_isPaused) {
+                                long pauseStart = Stopwatch.GetTimestamp();
+                                while (_isPaused) {
+                                    if(token.IsCancellationRequested) return;
+                                    Thread.Sleep(50);
+                                }
+                                long pauseDuration = Stopwatch.GetTimestamp() - pauseStart;
+                                startTimestamp += pauseDuration;
+                                targetTimestamp += pauseDuration;
+                            }
+
                             long current = Stopwatch.GetTimestamp();
                             if (current >= targetTimestamp) break;
 

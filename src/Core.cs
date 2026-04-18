@@ -43,7 +43,8 @@ namespace KeyR
     public class Settings
     {
         public string RecHotkey { get; set; } = "F8";
-        public string PlayHotkey { get; set; } = "F12";
+        public string PlayHotkey { get; set; } = "F9";
+        public string PauseHotkey { get; set; } = "F12";
         public double CustomSpeed { get; set; } = 1.0;
         public int LoopCount { get; set; } = 1;
         public bool AlwaysOnTop { get; set; } = true;

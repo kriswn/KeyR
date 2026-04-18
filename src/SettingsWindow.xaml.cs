@@ -103,6 +103,7 @@ namespace KeyR
             ChkShowConfirmations.IsChecked = !_settings.HideDeleteConfirmation;
             ChkAlwaysOnTop.IsChecked = _settings.AlwaysOnTop;
             CmbTheme.SelectedIndex = _settings.IsDarkTheme ? 0 : 1;
+            TxtPauseHotkey.Text = _settings.PauseHotkey;
 
             BtnToggleMatchLogic.Content = _settings.MatchAllConditions ? "Match: ALL" : "Match: ANY";
             BtnToggleMatchLogic.Tag = _settings.MatchAllConditions
@@ -318,6 +319,7 @@ namespace KeyR
         {
             _settings.RecHotkey = TxtRecHotkey.Text.Trim();
             _settings.PlayHotkey = TxtPlayHotkey.Text.Trim();
+            _settings.PauseHotkey = TxtPauseHotkey.Text.Trim();
 
             if (int.TryParse(TxtLoopCount.Text, out int count) && count > 0)
                 _settings.LoopCount = count;
@@ -364,6 +366,24 @@ namespace KeyR
         private void BtnResetSpeed_Click(object sender, RoutedEventArgs e)
         {
             TxtSpeed.Text = "1";
+            PrefsChanged(null, null);
+        }
+
+        private void BtnResetRecHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            TxtRecHotkey.Text = "F8";
+            PrefsChanged(null, null);
+        }
+
+        private void BtnResetPlayHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            TxtPlayHotkey.Text = "F9";
+            PrefsChanged(null, null);
+        }
+
+        private void BtnResetPauseHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            TxtPauseHotkey.Text = "F12";
             PrefsChanged(null, null);
         }
 
@@ -650,6 +670,7 @@ namespace KeyR
                     {
                         _settings.RecHotkey = imported.RecHotkey;
                         _settings.PlayHotkey = imported.PlayHotkey;
+                        _settings.PauseHotkey = imported.PauseHotkey;
                         _settings.CustomSpeed = imported.CustomSpeed;
                         _settings.LoopCount = imported.LoopCount;
                         _settings.AlwaysOnTop = imported.AlwaysOnTop;
@@ -732,7 +753,12 @@ namespace KeyR
         }
 
         private void BtnMinimize_Click(object sender, RoutedEventArgs e) => this.WindowState = WindowState.Minimized;
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => this.Close();
+        private void BtnClose_Click(object sender, RoutedEventArgs e) 
+        {
+            SaveSettingsFromUI();
+            _settings.Save();
+            this.Close();
+        }
 
         // --- Tooltip ---
         protected override void OnMouseMove(MouseEventArgs e)

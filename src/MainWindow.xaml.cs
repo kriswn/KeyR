@@ -26,7 +26,8 @@ namespace KeyR
 
         // Cached brushes (frozen for thread-safety and perf)
         private static readonly SolidColorBrush RecordingBrush = CreateFrozenBrush("#e63946");
-        private static readonly SolidColorBrush PlayingBrush = CreateFrozenBrush("#2a9d8f");
+        private static readonly SolidColorBrush PlayingBrush = CreateFrozenBrush("#2ECC71");
+        private static readonly SolidColorBrush PausedBrush = CreateFrozenBrush("#FFCC00");
         private static readonly Regex NumberOnlyRegex = new Regex("^[0-9]+$", RegexOptions.Compiled);
 
         private static SolidColorBrush CreateFrozenBrush(string hex)
@@ -144,6 +145,15 @@ namespace KeyR
 
                 if (isRecording) {
                     MainBorder.BorderBrush = RecordingBrush;
+                    RecIndicator.Data = Geometry.Parse("M12,12m-8,0a8,8 0 1,0 16,0a8,8 0 1,0 -16,0");
+                }
+                else {
+                    MainBorder.BorderBrush = (Brush)Application.Current.Resources["ThemeCardBorder"];
+                    RecIndicator.Data = Geometry.Parse("M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Z");
+                }
+
+                if (message == "Paused") {
+                    MainBorder.BorderBrush = PausedBrush;
                 }
                 else if (isPlaying) {
                     MainBorder.BorderBrush = PlayingBrush;
@@ -159,6 +169,29 @@ namespace KeyR
                 
                 BtnRec.IsEnabled = !isPlaying; 
                 BtnPlay.IsEnabled = !isRecording;
+
+                // Dynamic Play/Stop Icon Toggle
+                if (isPlaying)
+                {
+                    PlayIndicator.Data = Geometry.Parse("M5,3 h14 a2,2 0 0 1 2,2 v14 a2,2 0 0 1 -2,2 h-14 a2,2 0 0 1 -2,-2 v-14 a2,2 0 0 1 2,-2 z");
+                    PlayIndicator.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E63946")); // Red for Stop
+                    BtnPlay.Tag = "Stop";
+                }
+                else
+                {
+                    PlayIndicator.Data = Geometry.Parse("M19,10.63L7.1,3.23C5.7,2.36,3.9,3.37,3.9,5.03V19.83c0,1.66,1.8,2.67,3.2,1.8l11.9-7.4C20.3,13.38,20.3,11.45,19,10.63Z");
+                    PlayIndicator.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2ECC71")); // Green for Play
+                    BtnPlay.Tag = "Play";
+                }
+
+                bool isPaused = message == "Paused";
+                BtnRec.Visibility = isPlaying ? Visibility.Collapsed : Visibility.Visible;
+                BtnPause.Visibility = isPlaying ? Visibility.Visible : Visibility.Collapsed;
+                
+                if (isPlaying) {
+                    BtnPause.Tag = isPaused ? "Resume" : "Pause";
+                    BtnPause.Opacity = 1.0; // Keep fully visible even when paused
+                }
 
                 // Start/stop recording timer
                 if (isRecording)
@@ -221,6 +254,7 @@ namespace KeyR
         // --- Record / Play ---
         private void BtnRec_Click(object sender, RoutedEventArgs e) { _macroService.ToggleRecord(_settings); }
         private void BtnPlay_Click(object sender, RoutedEventArgs e) { _macroService.TogglePlay(_settings); }
+        private void BtnPause_Click(object sender, RoutedEventArgs e) { _macroService.TogglePause(); }
 
         // --- Window Controls ---
         private void BtnClose_Click(object sender, RoutedEventArgs e) 

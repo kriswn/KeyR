@@ -31,37 +31,37 @@ namespace KeyR
 
             if (dark)
             {
-                r["ThemeCardBg"]        = Br("#171821");
-                r["ThemeCardBorder"]    = Br("#2f3242");
-                r["ThemeBtnHover"]      = Br("#3a3e5c");
-                r["ThemeBtnPressed"]    = Br("#1f2230");
-                r["ThemeTextPrimary"]   = Br("#e0e6ed");
-                r["ThemeTextSecondary"] = Br("#a0a5b8");
-                r["ThemeTextMuted"]     = Br("#7a7e93");
-                r["ThemeTextDim"]       = Br("#4a5068");
+                r["ThemeCardBg"]        = Br("#1E1E1E");
+                r["ThemeCardBorder"]    = Br("#333333");
+                r["ThemeBtnHover"]      = Br("#404040");
+                r["ThemeBtnPressed"]    = Br("#262626");
+                r["ThemeTextPrimary"]   = Br("#E0E0E0");
+                r["ThemeTextSecondary"] = Br("#AAAAAA");
+                r["ThemeTextMuted"]     = Br("#808080");
+                r["ThemeTextDim"]       = Br("#555555");
                 r["ThemeHoverText"]     = Br("#FFFFFF");
-                r["ThemeSectionBg"]     = Br("#1a1c27");
-                r["ThemeInputBg"]       = Br("#171924");
-                r["ThemeInputBorder"]   = Br("#2f3242");
-                r["ThemeDivider"]       = Br("#2a2d3d");
-                r["ThemeTooltipBg"]     = Br("#1f2230");
-                r["ThemeTooltipBorder"] = Br("#3a3e5c");
-                r["ThemeItemBg"]        = Br("#13141f");
-                r["ThemeItemBorder"]    = Br("#2f3242");
+                r["ThemeSectionBg"]     = Br("#171717");
+                r["ThemeInputBg"]       = Br("#1E1E1E");
+                r["ThemeInputBorder"]   = Br("#333333");
+                r["ThemeDivider"]       = Br("#2D2D2D");
+                r["ThemeTooltipBg"]     = Br("#262626");
+                r["ThemeTooltipBorder"] = Br("#404040");
+                r["ThemeItemBg"]        = Br("#1A1A1A");
+                r["ThemeItemBorder"]    = Br("#333333");
                 r["ThemeOverlayBg"]     = Br("#D8000000");
-                r["ThemeTabBg"]         = Br("#13141f");
-                r["ThemeHoverBg"]       = Br("#2a2d3d");
-                r["ThemeCheckBg"]       = Br("#171924");
-                r["ThemeCheckBorder"]   = Br("#2f3242");
-                r["ThemeCheckHover"]    = Br("#4a4e69");
-                r["ThemeNotifBg"]       = Br("#1f2230");
+                r["ThemeTabBg"]         = Br("#1A1A1A");
+                r["ThemeHoverBg"]       = Br("#2D2D2D");
+                r["ThemeCheckBg"]       = Br("#1E1E1E");
+                r["ThemeCheckBorder"]   = Br("#333333");
+                r["ThemeCheckHover"]    = Br("#4D4D4D");
+                r["ThemeNotifBg"]       = Br("#262626");
                 
                 // New additions for granular control
-                r["ThemeAppBtnBg"]         = Br("#2f3242");
-                r["ThemeAppBtnHover"]      = Br("#3a3e5c");
-                r["ThemeTabSelectedBg"]    = Br("#2a9d8f");
+                r["ThemeAppBtnBg"]         = Br("#333333");
+                r["ThemeAppBtnHover"]      = Br("#404040");
+                r["ThemeTabSelectedBg"]    = Br("#FF8C00");
                 r["ThemeTabSelectedText"]  = Br("#FFFFFF");
-                r["ThemeTabHoverBg"]       = Br("#2a2d3d");
+                r["ThemeTabHoverBg"]       = Br("#2D2D2D");
             }
             else
             {
@@ -93,15 +93,15 @@ namespace KeyR
                 // New additions for granular control
                 r["ThemeAppBtnBg"]         = Br("#e4e6ec");
                 r["ThemeAppBtnHover"]      = Br("#d0d4e0");
-                r["ThemeTabSelectedBg"]    = Br("#ffffff"); // Mac-like selected tab
-                r["ThemeTabSelectedText"]  = Br("#1a1c2b");
+                r["ThemeTabSelectedBg"]    = Br("#FF8C00"); 
+                r["ThemeTabSelectedText"]  = Br("#FFFFFF");
                 r["ThemeTabHoverBg"]       = Br("#dadae3");
             }
 
             // Accent colors — same in both themes
-            r["ThemeAccent"]      = Br("#2a9d8f");
-            r["ThemeAccentHover"] = Br("#31b2a3");
-            r["ThemeAccentBright"]= Br("#42c2b1");
+            r["ThemeAccent"]      = Br("#E67E22");
+            r["ThemeAccentHover"] = Br("#D35400");
+            r["ThemeAccentBright"]= Br("#F39C12");
             r["ThemeDanger"]      = Br("#e63946");
             r["ThemeDangerHover"] = Br("#ff4d4d");
         }
