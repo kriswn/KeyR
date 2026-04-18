@@ -1051,7 +1051,7 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 			{
 				string[] lines = File.ReadAllLines(openFileDialog.FileName);
 				_macroService.ImportInformaalTask(lines);
-				_mainWindow.RefreshTitleBar();
+				_mainWindow.SetMacroName(System.IO.Path.GetFileNameWithoutExtension(openFileDialog.FileName));
 				ThemedConfirmWindow.Show(this, "Successfully converted InformaalTask macro:\n" + System.IO.Path.GetFileName(openFileDialog.FileName), out dontAskAgain, "OK", showDontAsk: false, isPositive: true);
 			}
 			catch (Exception ex)
@@ -1074,7 +1074,7 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 			{
 				byte[] rawData = File.ReadAllBytes(openFileDialog.FileName);
 				_macroService.ImportTinyTask(rawData);
-				_mainWindow.RefreshTitleBar();
+				_mainWindow.SetMacroName(System.IO.Path.GetFileNameWithoutExtension(openFileDialog.FileName));
 				ThemedConfirmWindow.Show(this, "Successfully extracted generic TinyTask records from:\n" + System.IO.Path.GetFileName(openFileDialog.FileName), out dontAskAgain, "OK", showDontAsk: false, isPositive: true);
 			}
 			catch (Exception ex)
@@ -1497,5 +1497,6 @@ public class SettingsWindow : Window, IComponentConnector, IStyleConnector
 		}
 	}
 }
+
 
 

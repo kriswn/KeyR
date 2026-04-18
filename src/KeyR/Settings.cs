@@ -44,6 +44,8 @@ public class Settings
 
 	public bool HideDeleteConfirmation { get; set; }
 
+	public bool HasCompletedFirstBoot { get; set; }
+
 	public int ConditionsPollingInterval { get; set; } = 1000;
 
 	public bool UseSmartRestart { get; set; }

@@ -7,19 +7,20 @@
     <TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms></PropertyGroup>
+  
   <PropertyGroup>
     <LangVersion>12.0</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms></PropertyGroup>
+  
   <PropertyGroup>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <RootNamespace />
   </PropertyGroup>
-  <PropertyGroup><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms></PropertyGroup>
+  
   <ItemGroup>
     <None Remove="appicon.png" />
+    
     
     
     
@@ -27,6 +28,7 @@
     <Resource Include="appicon.png" />
     <Resource Include="themedconfirmwindow.baml" />
     <Resource Include="settingswindow.baml" />
+    <Resource Include="themedinfobox.baml" />
     <Resource Include="mainwindow.baml" />
     <Resource Include="conditioneditorwindow.baml" />
   </ItemGroup>
@@ -34,6 +36,7 @@
     
   </ItemGroup>
   <ItemGroup><PackageReference Include="MouseKeyHook" Version="5.7.1" /></ItemGroup></Project>
+
 
 
 

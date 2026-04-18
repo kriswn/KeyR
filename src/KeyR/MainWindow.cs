@@ -95,11 +95,11 @@ public class MainWindow : Window, IComponentConnector
 		//IL_017a: Unknown result type (might be due to invalid IL or missing references)
 		//IL_018f: Expected O, but got Unknown
 		InitializeComponent();
-		Title = "KeyR"; base.Loaded += (s, e) => CheckAndReplaceSupTask(this);
+		Title = "KeyR";
 		_settings = Settings.Load();
 		_macroService = new MacroService();
 		_macroService.OnStatusChanged += UpdateStatus;
-		base.Loaded += MainWindow_Loaded; base.Loaded += (s, e) => CheckAndReplaceSupTask(this);
+		base.Loaded += MainWindow_Loaded;
 		base.Topmost = _settings.AlwaysOnTop;
 		_macroService.RegisterHotkeys(_settings);
 		if (_settings.X != -1.0 && _settings.Y != -1.0)
@@ -309,7 +309,9 @@ public class MainWindow : Window, IComponentConnector
 		return $"{value:D2}:{value2:D2}:{value3:D2}";
 	}
 
-	public void RefreshTitleBar()
+	public void SetMacroName(string name) { _macroName = name; RefreshTitleBar(); }
+
+    public void RefreshTitleBar()
 	{
 		int eventCount = _macroService.GetEventCount();
 		long durationMs = _macroService.GetDurationMs();
@@ -577,17 +579,7 @@ public class MainWindow : Window, IComponentConnector
 			break;
 		}
 	}
-
-    private void CheckAndReplaceSupTask(System.Windows.DependencyObject parent) {
-        if (parent == null) return;
-        int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
-        for (int i = 0; i < count; i++) {
-            var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
-            if (child is System.Windows.Controls.TextBlock tb && tb.Text != null && tb.Text.Contains("SupTask")) {
-                tb.Text = tb.Text.Replace("SupTask", "KeyR");
-            }
-            CheckAndReplaceSupTask(child);
-        }
-    }
 }
+
+
 

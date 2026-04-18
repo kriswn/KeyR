@@ -97,6 +97,9 @@ public class MacroService : IDisposable
 
 		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
 		public static extern nint GetModuleHandle(string lpModuleName);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern int GetSystemMetrics(int nIndex);
 	}
 
 	private List<MacroEvent> _events = new List<MacroEvent>(2048);
@@ -756,333 +759,170 @@ public class MacroService : IDisposable
 	}
 
 	public void ImportInformaalTask(string[] lines)
-	{
-		List<MacroEvent> list = new List<MacroEvent>();
-		double primaryScreenWidth = SystemParameters.PrimaryScreenWidth;
-		double primaryScreenHeight = SystemParameters.PrimaryScreenHeight;
-		double num = 0.0;
-		double num2 = 0.0;
-		bool flag = false;
-		string[] array = lines;
-		foreach (string text in array)
-		{
-			if (string.IsNullOrWhiteSpace(text) || text.StartsWith("#"))
-			{
-				continue;
-			}
-			string[] array2 = text.Split('|');
-			if (array2.Length < 3)
-			{
-				continue;
-			}
-			string text2 = array2[0].Trim().ToUpperInvariant();
-			string[] array3 = null;
-			if (text2 == "MOVE" || text2 == "MOUSE_MOVE")
-			{
-				if (array2.Length >= 4)
-				{
-					array3 = ((array2.Length < 5) ? new string[2]
-					{
-						array2[2],
-						array2[3]
-					} : new string[2]
-					{
-						array2[3],
-						array2[4]
-					});
-				}
-				else
-				{
-					string[] array4 = array2[2].Split(',');
-					if (array4.Length >= 2)
-					{
-						array3 = new string[2]
-						{
-							array4[0],
-							array4[1]
-						};
-					}
-				}
-			}
-			else if (text2.Contains("MOUSE"))
-			{
-				if (array2.Length >= 5)
-				{
-					array3 = new string[2]
-					{
-						array2[3],
-						array2[4]
-					};
-				}
-				else
-				{
-					string[] array5 = array2[2].Split(',');
-					if (array5.Length >= 3)
-					{
-						array3 = new string[2]
-						{
-							array5[1],
-							array5[2]
-						};
-					}
-					else if (array5.Length == 2)
-					{
-						array3 = array5;
-					}
-				}
-			}
-			if (array3 != null && array3.Length >= 2 && double.TryParse(array3[0], out var result) && double.TryParse(array3[1], out var result2))
-			{
-				if (result > num)
-				{
-					num = result;
-				}
-				if (result2 > num2)
-				{
-					num2 = result2;
-				}
-				flag = true;
-			}
-		}
-		double num3 = 1.0;
-		double num4 = 1.0;
-		string value = "Raw Pixels";
-		if (flag)
-		{
-			if (num <= 1.05)
-			{
-				num3 = primaryScreenWidth;
-				num4 = primaryScreenHeight;
-				value = "0..1 Scale";
-			}
-			else if (num <= 1005.0)
-			{
-				num3 = primaryScreenWidth / 1000.0;
-				num4 = primaryScreenHeight / 1000.0;
-				value = "0..1000 Scale";
-			}
-			else if (num <= 65536.0)
-			{
-				if (num > primaryScreenWidth + 100.0)
-				{
-					num3 = primaryScreenWidth / 65535.0;
-					num4 = primaryScreenHeight / 65535.0;
-					value = "Normalized (65k)";
-				}
-				else if (Math.Abs(num - 1920.0) < 10.0 || Math.Abs(num2 - 1080.0) < 10.0)
-				{
-					num3 = primaryScreenWidth / 1920.0;
-					num4 = primaryScreenHeight / 1080.0;
-					value = "Scale 1080p -> Current";
-				}
-			}
-		}
-		int x = 0;
-		int y = 0;
-		array = lines;
-		foreach (string text3 in array)
-		{
-			if (string.IsNullOrWhiteSpace(text3) || text3.StartsWith("#"))
-			{
-				continue;
-			}
-			string[] array6 = text3.Split('|');
-			if (array6.Length < 3)
-			{
-				continue;
-			}
-			string text4 = array6[0].Trim().ToUpperInvariant();
-			if (!double.TryParse(array6[1], out var result3))
-			{
-				result3 = 0.0;
-			}
-			string[] array7 = null;
-			string text5 = "Left";
-			if (text4.Contains("MOUSE") || text4 == "MOVE")
-			{
-				if (array6.Length >= 4 && (text4 == "MOVE" || text4 == "MOUSE_MOVE"))
-				{
-					if (array6.Length >= 5)
-					{
-						text5 = array6[2].Trim();
-						array7 = new string[2]
-						{
-							array6[3],
-							array6[4]
-						};
-					}
-					else
-					{
-						array7 = new string[2]
-						{
-							array6[2],
-							array6[3]
-						};
-					}
-				}
-				else
-				{
-					string[] array8 = array6[2].Split(',');
-					if (text4 == "MOVE" || text4 == "MOUSE_MOVE")
-					{
-						text5 = "Move";
-						if (array8.Length >= 2)
-						{
-							array7 = new string[2]
-							{
-								array8[0],
-								array8[1]
-							};
-						}
-					}
-					else
-					{
-						text5 = array8[0].Trim();
-						if (array8.Length >= 3)
-						{
-							array7 = new string[2]
-							{
-								array8[1],
-								array8[2]
-							};
-						}
-						else if (array8.Length == 2)
-						{
-							array7 = array8;
-						}
-					}
-				}
-				if (array7 != null && array7.Length >= 2 && double.TryParse(array7[0], out var result4) && double.TryParse(array7[1], out var result5))
-				{
-					x = (int)(result4 * num3);
-					y = (int)(result5 * num4);
-				}
-				switch (text5)
-				{
-				case "2":
-					text5 = "Right";
-					break;
-				case "3":
-					text5 = "Middle";
-					break;
-				case "4":
-					text5 = "Wheel";
-					break;
-				case "5":
-					text5 = "HWheel";
-					break;
-				default:
-					if (text5 != "Left" && text5 != "Right" && text5 != "Middle" && text5 != "Move")
-					{
-						text5 = "Left";
-					}
-					break;
-				}
-				list.Add(new MacroEvent
-				{
-					Type = EventType.MouseEvent,
-					Delay = result3,
-					X = x,
-					Y = y,
-					Button = ((text4 == "MOVE" || text4 == "MOUSE_MOVE") ? "Move" : text5),
-					IsDown = (text4 == "MOUSE_DOWN")
-				});
-			}
-			else
-			{
-				if (!(text4 == "KEY_DOWN") && !(text4 == "KEY_UP"))
-				{
-					continue;
-				}
-				string text6 = array6[2].Trim();
-				int num5 = 0;
-				if (int.TryParse(text6, out var result6))
-				{
-					num5 = result6;
-				}
-				else
-				{
-					string text7 = text6.ToUpperInvariant().Replace("VK_", "");
-					switch (text7)
-					{
-					case "ENTER":
-					case "RETURN":
-						num5 = 13;
-						break;
-					case "SPACE":
-						num5 = 32;
-						break;
-					case "TAB":
-						num5 = 9;
-						break;
-					case "ESCAPE":
-					case "ESC":
-						num5 = 27;
-						break;
-					case "SHIFT":
-					case "LSHIFT":
-					case "RSHIFT":
-						num5 = 16;
-						break;
-					case "CTRL":
-					case "LCONTROL":
-					case "RCONTROL":
-					case "CONTROL":
-						num5 = 17;
-						break;
-					case "ALT":
-					case "LMENU":
-					case "RMENU":
-						num5 = 18;
-						break;
-					case "BACKSPACE":
-					case "BACK":
-						num5 = 8;
-						break;
-					case "UP":
-						num5 = 38;
-						break;
-					case "DOWN":
-						num5 = 40;
-						break;
-					case "LEFT":
-						num5 = 37;
-						break;
-					case "RIGHT":
-						num5 = 39;
-						break;
-					default:
-						if (text7.Length >= 1)
-						{
-							num5 = text7[0];
-						}
-						break;
-					}
-				}
-				if (num5 > 0)
-				{
-					list.Add(new MacroEvent
-					{
-						Type = EventType.KeyEvent,
-						Delay = result3,
-						KeyCode = num5,
-						IsDown = (text4 == "KEY_DOWN")
-					});
-				}
-			}
-		}
-		if (list.Count > 0)
-		{
-			_events = list;
-			this.OnStatusChanged?.Invoke($"Imported {list.Count} acts ({value})", isRecording: false, isPlaying: false);
-		}
-	}
+        {
+            var newEvents = new List<MacroEvent>();
+            double targetW = NativeMethods.GetSystemMetrics(78); if (targetW == 0) targetW = NativeMethods.GetSystemMetrics(0);
+            double targetH = NativeMethods.GetSystemMetrics(79); if (targetH == 0) targetH = NativeMethods.GetSystemMetrics(1);
 
-	public void ImportTinyTask(byte[] rawData)
+            // Pass 1: Analysis - Discover coordinate system and range
+            double maxX = 0, maxY = 0;
+            bool foundCoords = false;
+
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
+                var parts = line.Split('|');
+                if (parts.Length < 3) continue;
+
+                string type = parts[0].Trim().ToUpperInvariant();
+                string[] coordParts = null;
+
+                if (type == "MOVE" || type == "MOUSE_MOVE")
+                {
+                    if (parts.Length >= 4) // TYPE|DELAY|X|Y or TYPE|DELAY|B|X|Y
+                        coordParts = (parts.Length >= 5) ? new[] { parts[3], parts[4] } : new[] { parts[2], parts[3] };
+                    else // TYPE|DELAY|X,Y
+                    {
+                        var dp = parts[2].Split(',');
+                        if (dp.Length >= 2) coordParts = new[] { dp[0], dp[1] };
+                    }
+                }
+                else if (type.Contains("MOUSE"))
+                {
+                    if (parts.Length >= 5) // TYPE|DELAY|B|X|Y
+                        coordParts = new[] { parts[3], parts[4] };
+                    else // TYPE|DELAY|B,X,Y
+                    {
+                        var dp = parts[2].Split(',');
+                        if (dp.Length >= 3) coordParts = new[] { dp[1], dp[2] };
+                        else if (dp.Length == 2) coordParts = dp;
+                    }
+                }
+
+                if (coordParts != null && coordParts.Length >= 2 && 
+                    double.TryParse(coordParts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double x) && double.TryParse(coordParts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double y))
+                {
+                    if (x > maxX) maxX = x;
+                    if (y > maxY) maxY = y;
+                    foundCoords = true;
+                }
+            }
+
+            // Determine scaling factor
+            double scaleX = 1.0, scaleY = 1.0;
+            string scaleInfo = "Raw Pixels";
+            if (foundCoords)
+            {
+                if (maxX <= 1.05) { scaleX = targetW; scaleY = targetH; scaleInfo = "0..1 Scale"; }
+                else if (maxX <= 1005) { scaleX = targetW / 1000.0; scaleY = targetH / 1000.0; scaleInfo = "0..1000 Scale"; }
+                else if (maxX <= 65536) 
+                {
+                    if (maxX > targetW + 100) { scaleX = targetW / 65535.0; scaleY = targetH / 65535.0; scaleInfo = "Normalized (65k)"; }
+                    else if (Math.Abs(maxX - 1920) < 10 || Math.Abs(maxY - 1080) < 10) { scaleX = targetW / 1920.0; scaleY = targetH / 1080.0; scaleInfo = "Scale 1080p -> Current"; }
+                }
+            }
+
+            // Pass 2: Import with determined scaling
+            int lastX = 0, lastY = 0;
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
+                var parts = line.Split('|');
+                if (parts.Length < 3) continue;
+
+                string type = parts[0].Trim().ToUpperInvariant();
+                if (!double.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double delay)) delay = 0;
+
+                string[] coordParts = null;
+                string btn = "Left";
+                bool isMouse = type.Contains("MOUSE") || type == "MOVE";
+
+                if (isMouse)
+                {
+                    if (parts.Length >= 4 && (type == "MOVE" || type == "MOUSE_MOVE"))
+                    {
+                        if (parts.Length >= 5) { btn = parts[2].Trim(); coordParts = new[] { parts[3], parts[4] }; }
+                        else coordParts = new[] { parts[2], parts[3] };
+                    }
+                    else
+                    {
+                        var dataParts = parts[2].Split(',');
+                        if (type == "MOVE" || type == "MOUSE_MOVE")
+                        {
+                            btn = "Move";
+                            if (dataParts.Length >= 2) coordParts = new[] { dataParts[0], dataParts[1] };
+                        }
+                        else
+                        {
+                            btn = dataParts[0].Trim();
+                            if (dataParts.Length >= 3) coordParts = new[] { dataParts[1], dataParts[2] };
+                            else if (dataParts.Length == 2) coordParts = dataParts;
+                        }
+                    }
+
+                    if (coordParts != null && coordParts.Length >= 2 && 
+                        double.TryParse(coordParts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double x) && double.TryParse(coordParts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double y))
+                    {
+                        lastX = (int)(x * scaleX);
+                        lastY = (int)(y * scaleY);
+                    }
+
+                    if (btn == "2") btn = "Right";
+                    else if (btn == "3") btn = "Middle";
+                    else if (btn == "4") btn = "Wheel";
+                    else if (btn == "5") btn = "HWheel";
+                    else if (btn != "Left" && btn != "Right" && btn != "Middle" && btn != "Move") btn = "Left";
+
+                    newEvents.Add(new MacroEvent { 
+                        Type = EventType.MouseEvent, 
+                        Delay = delay, 
+                        X = lastX, 
+                        Y = lastY, 
+                        Button = (type == "MOVE" || type == "MOUSE_MOVE") ? "Move" : btn, 
+                        IsDown = (type == "MOUSE_DOWN") 
+                    });
+                }
+                else if (type == "KEY_DOWN" || type == "KEY_UP")
+                {
+                    string kData = parts[2].Trim();
+                    int keyCode = 0;
+                    if (int.TryParse(kData, out int code)) keyCode = code;
+                    else
+                    {
+                        string dUpper = kData.ToUpperInvariant().Replace("VK_", "");
+                        if (dUpper == "ENTER" || dUpper == "RETURN") keyCode = 13;
+                        else if (dUpper == "SPACE") keyCode = 32;
+                        else if (dUpper == "TAB") keyCode = 9;
+                        else if (dUpper == "ESCAPE" || dUpper == "ESC") keyCode = 27;
+                        else if (dUpper == "SHIFT" || dUpper == "LSHIFT" || dUpper == "RSHIFT") keyCode = 16;
+                        else if (dUpper == "CTRL" || dUpper == "LCONTROL" || dUpper == "RCONTROL" || dUpper == "CONTROL") keyCode = 17;
+                        else if (dUpper == "ALT" || dUpper == "LMENU" || dUpper == "RMENU") keyCode = 18;
+                        else if (dUpper == "BACKSPACE" || dUpper == "BACK") keyCode = 8;
+                        else if (dUpper == "UP") keyCode = 38;
+                        else if (dUpper == "DOWN") keyCode = 40;
+                        else if (dUpper == "LEFT") keyCode = 37;
+                        else if (dUpper == "RIGHT") keyCode = 39;
+                        else if (dUpper.Length >= 1) keyCode = (int)dUpper[0];
+                    }
+                    
+                    if (keyCode > 0)
+                        newEvents.Add(new MacroEvent { Type = EventType.KeyEvent, Delay = delay, KeyCode = keyCode, IsDown = (type == "KEY_DOWN") });
+                }
+            }
+
+            if (newEvents.Count > 0)
+            {
+                _events = newEvents;
+                OnStatusChanged?.Invoke($"Imported {newEvents.Count} acts ({scaleInfo})", false, false);
+            }
+        }
+
+        
+public void ImportTinyTask(byte[] rawData)
 	{
 		List<MacroEvent> list = new List<MacroEvent>();
-		double primaryScreenWidth = SystemParameters.PrimaryScreenWidth;
-		double primaryScreenHeight = SystemParameters.PrimaryScreenHeight;
+		double primaryScreenWidth = NativeMethods.GetSystemMetrics(78);
+		double primaryScreenHeight = NativeMethods.GetSystemMetrics(79);
 		int i = 0;
 		if (rawData.Length > 8 && rawData[0] == 84)
 		{
@@ -1255,5 +1095,9 @@ public class MacroService : IDisposable
 		}
 	}
 }
+
+
+
+
 
 
