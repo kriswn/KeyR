@@ -4,7 +4,7 @@
         Title="KeyR" Height="117" Width="300" MinWidth="300" MaxWidth="300" MinHeight="117" MaxHeight="117"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ResizeMode="NoResize"
-        Icon="appIcon.png"
+        Icon="appIcon.ico"
         Closing="Window_Closing"
         LocationChanged="Window_LocationChanged"
         StateChanged="Window_StateChanged">
