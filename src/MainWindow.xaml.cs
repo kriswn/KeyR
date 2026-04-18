@@ -193,6 +193,43 @@ namespace KeyR
                     BtnPause.Opacity = 1.0; // Keep fully visible even when paused
                 }
 
+                // Force tooltip refresh if open (so Pause/Resume updates immediately without mouse move)
+                if (HoverTooltip.IsOpen)
+                {
+                    var pos = Mouse.GetPosition(this);
+                    DependencyObject element = Mouse.DirectlyOver as DependencyObject;
+                    
+                    // If DirectlyOver is null or doesn't have a tag, we might need a hit test
+                    // but usually walking up the tree from DirectlyOver is sufficient.
+                    if (element == null) {
+                        var hitTest = VisualTreeHelper.HitTest(this, pos);
+                        element = hitTest?.VisualHit;
+                    }
+
+                    while (element != null)
+                    {
+                        if (element is FrameworkElement fe && fe.Tag is string tagStr && !string.IsNullOrEmpty(tagStr))
+                        {
+                            TxtHoverTooltip.Text = tagStr;
+                            TxtHoverTooltip.UpdateLayout();
+                            
+                            // Re-calculate position since text/size might have changed
+                            var screenPos = PointToScreen(pos);
+                            double w = TxtHoverTooltip.ActualWidth + 20;
+                            double h = TxtHoverTooltip.ActualHeight + 12;
+                            double targetX = screenPos.X + 15;
+                            double targetY = screenPos.Y + 15;
+                            if (targetX + w > SystemParameters.VirtualScreenWidth) targetX = screenPos.X - w - 5;
+                            if (targetY + h > SystemParameters.VirtualScreenHeight) targetY = screenPos.Y - h - 5;
+                            
+                            HoverTooltip.HorizontalOffset = targetX;
+                            HoverTooltip.VerticalOffset = targetY;
+                            break;
+                        }
+                        element = VisualTreeHelper.GetParent(element);
+                    }
+                }
+
                 // Start/stop recording timer
                 if (isRecording)
                     _recordingTimer.Start();
