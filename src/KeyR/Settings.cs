@@ -6,6 +6,11 @@ namespace SupTask;
 
 public class Settings
 {
+	private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+	{
+		WriteIndented = true
+	};
+
 	public string RecHotkey { get; set; } = "F8";
 
 	public string PlayHotkey { get; set; } = "F12";
@@ -43,7 +48,7 @@ public class Settings
 		{
 			try
 			{
-				return JsonSerializer.Deserialize<Settings>(File.ReadAllText(settingsPath)) ?? new Settings();
+				return JsonSerializer.Deserialize<Settings>(File.ReadAllText(settingsPath), _jsonOptions) ?? new Settings();
 			}
 			catch
 			{
@@ -55,10 +60,7 @@ public class Settings
 	public void Save()
 	{
 		string settingsPath = GetSettingsPath();
-		string contents = JsonSerializer.Serialize(this, new JsonSerializerOptions
-		{
-			WriteIndented = true
-		});
+		string contents = JsonSerializer.Serialize(this, _jsonOptions);
 		File.WriteAllText(settingsPath, contents);
 	}
 }

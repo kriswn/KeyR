@@ -100,28 +100,56 @@ public static class BypassInput
 		public MOUSEKEYBDHARDWAREINPUT mkhi;
 	}
 
+	private static readonly int InputSize = Marshal.SizeOf(typeof(INPUT));
+
+	private static readonly INPUT[] _keyInput = new INPUT[1];
+
+	private static readonly INPUT[] _mouseClickInput = new INPUT[1];
+
+	private static readonly INPUT[] _mouseMoveInput = new INPUT[1];
+
+	private static double _cachedScreenWidth;
+
+	private static double _cachedScreenHeight;
+
+	private static bool _screenCached;
+
 	[DllImport("user32.dll")]
 	private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
 	[DllImport("user32.dll")]
 	private static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
+	public static void InvalidateScreenCache()
+	{
+		_screenCached = false;
+	}
+
+	private static void EnsureScreenCached()
+	{
+		if (!_screenCached)
+		{
+			_cachedScreenWidth = SystemParameters.PrimaryScreenWidth;
+			_cachedScreenHeight = SystemParameters.PrimaryScreenHeight;
+			_screenCached = true;
+		}
+	}
+
 	public static void SendKey(ushort keycode, bool isDown)
 	{
 		ushort wScan = (ushort)MapVirtualKey(keycode, 0u);
-		INPUT[] array = new INPUT[1];
-		array[0].type = 1u;
-		array[0].mkhi.ki.wVk = 0;
-		array[0].mkhi.ki.wScan = wScan;
-		array[0].mkhi.ki.time = 0u;
-		array[0].mkhi.ki.dwExtraInfo = IntPtr.Zero;
+		_keyInput[0].type = 1u;
+		_keyInput[0].mkhi.ki.wVk = 0;
+		_keyInput[0].mkhi.ki.wScan = wScan;
+		_keyInput[0].mkhi.ki.time = 0u;
+		_keyInput[0].mkhi.ki.dwExtraInfo = IntPtr.Zero;
 		uint num = 8u;
 		if (!isDown)
 		{
 			num |= 2;
 		}
-		array[0].mkhi.ki.dwFlags = num;
-		SendInput(1u, array, Marshal.SizeOf(typeof(INPUT)));
+		_keyInput[0].mkhi.ki.dwFlags = num;
+		SendInput(1u, _keyInput, InputSize);
 	}
 
 	public static void SendMouseClick(string button, bool isDown)
@@ -141,33 +169,30 @@ public static class BypassInput
 		}
 		if (num != 0)
 		{
-			INPUT[] array = new INPUT[1];
-			array[0].type = 0u;
-			array[0].mkhi.mi.dx = 0;
-			array[0].mkhi.mi.dy = 0;
-			array[0].mkhi.mi.mouseData = 0u;
-			array[0].mkhi.mi.time = 0u;
-			array[0].mkhi.mi.dwFlags = num;
-			array[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
-			SendInput(1u, array, Marshal.SizeOf(typeof(INPUT)));
+			_mouseClickInput[0].type = 0u;
+			_mouseClickInput[0].mkhi.mi.dx = 0;
+			_mouseClickInput[0].mkhi.mi.dy = 0;
+			_mouseClickInput[0].mkhi.mi.mouseData = 0u;
+			_mouseClickInput[0].mkhi.mi.time = 0u;
+			_mouseClickInput[0].mkhi.mi.dwFlags = num;
+			_mouseClickInput[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
+			SendInput(1u, _mouseClickInput, InputSize);
 		}
 	}
 
 	public static void SendMouseMove(int x, int y)
 	{
-		double primaryScreenWidth = SystemParameters.PrimaryScreenWidth;
-		double primaryScreenHeight = SystemParameters.PrimaryScreenHeight;
-		int dx = (int)((double)(x * 65536) / primaryScreenWidth) + 1;
-		int dy = (int)((double)(y * 65536) / primaryScreenHeight) + 1;
-		INPUT[] array = new INPUT[1];
-		array[0].type = 0u;
-		array[0].mkhi.mi.dx = dx;
-		array[0].mkhi.mi.dy = dy;
-		array[0].mkhi.mi.mouseData = 0u;
-		array[0].mkhi.mi.time = 0u;
-		array[0].mkhi.mi.dwFlags = 32769u;
-		array[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
-		SendInput(1u, array, Marshal.SizeOf(typeof(INPUT)));
+		EnsureScreenCached();
+		int dx = (int)((double)(x * 65536) / _cachedScreenWidth) + 1;
+		int dy = (int)((double)(y * 65536) / _cachedScreenHeight) + 1;
+		_mouseMoveInput[0].type = 0u;
+		_mouseMoveInput[0].mkhi.mi.dx = dx;
+		_mouseMoveInput[0].mkhi.mi.dy = dy;
+		_mouseMoveInput[0].mkhi.mi.mouseData = 0u;
+		_mouseMoveInput[0].mkhi.mi.time = 0u;
+		_mouseMoveInput[0].mkhi.mi.dwFlags = 32769u;
+		_mouseMoveInput[0].mkhi.mi.dwExtraInfo = IntPtr.Zero;
+		SendInput(1u, _mouseMoveInput, InputSize);
 	}
 }
 

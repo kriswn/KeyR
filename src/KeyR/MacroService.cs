@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Windows;
@@ -13,7 +12,7 @@ namespace SupTask;
 
 public class MacroService : IDisposable
 {
-	private List<MacroEvent> _events = new List<MacroEvent>();
+	private List<MacroEvent> _events = new List<MacroEvent>(2048);
 
 	private IKeyboardMouseEvents _recHook;
 
@@ -28,6 +27,8 @@ public class MacroService : IDisposable
 	private Action _recAction;
 
 	private Action _playAction;
+
+	private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
 
 	private string _recHotkey;
 
@@ -170,7 +171,7 @@ public class MacroService : IDisposable
 			_recHook = null;
 		}
 		_stopwatch.Stop();
-		if (_events.Count > 0 && _events.Last().Type == EventType.KeyEvent)
+		if (_events.Count > 0 && _events[_events.Count - 1].Type == EventType.KeyEvent)
 		{
 			_events.RemoveAt(_events.Count - 1);
 			if (_events.Count > 0)
@@ -245,6 +246,7 @@ public class MacroService : IDisposable
 		{
 			IsPlaying = true;
 			_playCts = new CancellationTokenSource();
+			BypassInput.InvalidateScreenCache();
 			this.OnStatusChanged?.Invoke("Playing", isRecording: false, isPlaying: true);
 			_playThread = new Thread((ThreadStart)delegate
 			{
@@ -298,7 +300,7 @@ public class MacroService : IDisposable
 					}
 					while (stopwatch.ElapsedMilliseconds < num3 && !token.IsCancellationRequested)
 					{
-						Thread.SpinWait(100);
+						Thread.SpinWait(10);
 					}
 					if (token.IsCancellationRequested)
 					{
@@ -335,14 +337,14 @@ public class MacroService : IDisposable
 
 	public string Serialize()
 	{
-		return JsonSerializer.Serialize(_events);
+		return JsonSerializer.Serialize(_events, _jsonOptions);
 	}
 
 	public void Deserialize(string json)
 	{
 		try
 		{
-			List<MacroEvent> list = JsonSerializer.Deserialize<List<MacroEvent>>(json);
+			List<MacroEvent> list = JsonSerializer.Deserialize<List<MacroEvent>>(json, _jsonOptions);
 			if (list != null)
 			{
 				_events = list;
@@ -370,7 +372,12 @@ public class MacroService : IDisposable
 		{
 			return 0L;
 		}
-		return _events.Sum((MacroEvent e) => e.Delay);
+		long num = 0L;
+		for (int i = 0; i < _events.Count; i++)
+		{
+			num += _events[i].Delay;
+		}
+		return num;
 	}
 
 	public void Dispose()

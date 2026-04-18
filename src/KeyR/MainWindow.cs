@@ -45,6 +45,14 @@ public class MainWindow : Window, IComponentConnector
 
 	private bool _isAnimatingHeight;
 
+	private static readonly SolidColorBrush RecordingBrush = CreateFrozenBrush("#e63946");
+
+	private static readonly SolidColorBrush PlayingBrush = CreateFrozenBrush("#2a9d8f");
+
+	private static readonly SolidColorBrush HotkeyListenBrush = CreateFrozenBrush("#3a86ff");
+
+	private static readonly Regex NumberOnlyRegex = new Regex("^[0-9]+$", RegexOptions.Compiled);
+
 	private System.Windows.Controls.TextBox _currentHotkeyBox;
 
 	private const int GWL_STYLE = -16;
@@ -118,6 +126,13 @@ public class MainWindow : Window, IComponentConnector
 	internal Border GlobalOverlay;
 
 	private bool _contentLoaded;
+
+	private static SolidColorBrush CreateFrozenBrush(string hex)
+	{
+		SolidColorBrush solidColorBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+		((Freezable)solidColorBrush).Freeze();
+		return solidColorBrush;
+	}
 
 	public MainWindow()
 	{
@@ -431,11 +446,11 @@ public class MainWindow : Window, IComponentConnector
 			}
 			if (isRecording)
 			{
-				MainBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#e63946"));
+				MainBorder.BorderBrush = RecordingBrush;
 			}
 			else if (isPlaying)
 			{
-				MainBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2a9d8f"));
+				MainBorder.BorderBrush = PlayingBrush;
 			}
 			else
 			{
@@ -638,7 +653,7 @@ public class MainWindow : Window, IComponentConnector
 	{
 		_isListeningForHotkey = true;
 		GlobalOverlay.Visibility = Visibility.Visible;
-		MainBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3a86ff"));
+		MainBorder.BorderBrush = HotkeyListenBrush;
 		_currentHotkeyBox = sender as System.Windows.Controls.TextBox;
 		_macroService.SuspendHotkeys();
 	}
@@ -967,7 +982,7 @@ public class MainWindow : Window, IComponentConnector
 
 	private void NumberOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
 	{
-		e.Handled = !Regex.IsMatch(e.Text, "^[0-9]+$");
+		e.Handled = !NumberOnlyRegex.IsMatch(e.Text);
 	}
 
 	[DebuggerNonUserCode]
