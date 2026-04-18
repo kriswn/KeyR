@@ -131,18 +131,6 @@ public partial class App : Application
             return;
         }
 
-        // First boot passed — show welcome message
-        var welcomeMsg = "Welcome to KeyR! 🎯\n\n" +
-                         "All dependencies verified successfully.\n\n" +
-                         "Quick start:\n" +
-                         "• Press your Record hotkey to start recording\n" +
-                         "• Press your Play hotkey to play back\n" +
-                         "• Access Settings via the ⚙ button\n\n" +
-                         "This message will only appear once.";
-                         
-        var welcomeBox = new ThemedInfoBox("KeyR — Setup Complete", welcomeMsg, "Get Started!");
-        welcomeBox.ShowDialog();
-
         // Update settings flag so we don't check again
         settings.HasCompletedFirstBoot = true;
         settings.Save();

@@ -24,7 +24,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-
+    <Content Remove="appicon.png" />
+    <Content Remove="website_appIcon.png" />
+    <None Include="appicon.png" />
+    <None Include="website_appIcon.png" />
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.2" />
   </ItemGroup>
