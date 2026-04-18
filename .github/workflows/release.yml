@@ -25,12 +25,15 @@ jobs:
       - name: Rename Executable
         run: |
           $tag = "${{ github.ref_name }}"
-          Rename-Item "build_output\SupTask.exe" "build_output\KeyR_$tag_win_x64.exe" -ErrorAction SilentlyContinue
-          Rename-Item "build_output\KeyR.exe" "build_output\KeyR_$tag_win_x64.exe" -ErrorAction SilentlyContinue
+          $newName = "KeyR_${tag}_win_x64.exe"
+          if (Test-Path "build_output\SupTask.exe") { Rename-Item "build_output\SupTask.exe" $newName }
+          elseif (Test-Path "build_output\KeyR.exe") { Rename-Item "build_output\KeyR.exe" $newName }
 
-      - name: Create Release
+      - name: Create Pre-Release
         uses: softprops/action-gh-release@v1
         with:
           files: build_output\KeyR_*_win_x64.exe
+          prerelease: true
+          name: "KeyR ${{ github.ref_name }} Beta"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
