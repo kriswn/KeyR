@@ -430,6 +430,7 @@
                 <a href="index.html">Home</a>
                 <div class="nav__divider"></div>
                 <div class="nav__scroll-area" id="navScrollArea">
+                    <a href="#v36">v0.3.6</a>
                     <a href="#v35">v0.3.5</a>
                     <a href="#v34">v0.3.4</a>
                     <a href="#v33">v0.3.3</a>
@@ -705,6 +706,37 @@
               </div>
           </section>
 
+          <section id="v36" class="doc-section fade-in">
+              <span class="doc-section__version">v0.3.6 Beta (UI Stability & Scaling)</span>
+              <h2 class="doc-section__title">Deterministic Scaling Engine</h2>
+              <div class="doc-section__content">
+                  <p>A precision update focused on window management stability and high-DPI scaling accuracy.</p>
+                  
+                  <div class="feature-list">
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">Deterministic Positioning</span>
+                          <span class="feature-list__desc">Reordered initialization logic so windows apply Font Scaling before restoring their position, ensuring perfect coordinates on high-resolution screens.</span>
+                      </div>
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">Scaling Continuity</span>
+                          <span class="feature-list__desc">Refactored the scaling engine to use fixed base dimensions, resolving the "width reset" bug when reopening Settings or Condition windows.</span>
+                      </div>
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">Window Persistence Guards</span>
+                          <span class="feature-list__desc">Implemented Scaling Guards (_isScaling) to prevent the OS from saving temporary "jumping" coordinates during layout transforms.</span>
+                      </div>
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">Dynamic MainWindow Height</span>
+                          <span class="feature-list__desc">Removed hardcoded height constraints in favor of SizeToContent, ensuring action buttons are never clipped at non-standard font scales.</span>
+                      </div>
+                      <div class="feature-list__item">
+                          <span class="feature-list__name">UI Refinements</span>
+                          <span class="feature-list__desc">Standardized input fields at 50px width with centered alignment and thickened (3.0px) vertical dividers for a more professional feel.</span>
+                      </div>
+                  </div>
+              </div>
+          </section>
+          
           <section id="v35" class="doc-section fade-in">
               <span class="doc-section__version">v0.3.5 (Modern UI & Branding Refinement)</span>
               <h2 class="doc-section__title">Aesthetics & Optimization</h2>
@@ -749,6 +781,7 @@
             <div class="sidebar__divider" style="flex-shrink: 0;"></div>
             
             <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: none;">
+                <a href="#v36" class="sidebar__link" onclick="closeSidebar()">v0.3.6 (Fixed Scaling)</a>
                 <a href="#v35" class="sidebar__link" onclick="closeSidebar()">v0.3.5 (Modern UI)</a>
                 <a href="#v34" class="sidebar__link" onclick="closeSidebar()">v0.3.4 (Centroid)</a>
                 <a href="#v33" class="sidebar__link" onclick="closeSidebar()">v0.3.3 (Checks)</a>
