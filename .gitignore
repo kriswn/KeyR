@@ -7,7 +7,7 @@ obj/
 
 
 Create-Release.bat
-FixWebsite.py
 Publish.bat
 *.py
+*.bat
 
