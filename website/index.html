@@ -224,10 +224,10 @@
             display: none;
         }
         .nav__divider {
-            width: 1px;
+            width: 2.5px;
             height: 14px;
-            background: rgba(255, 255, 255, 0.08);
-            margin: 0 6px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 0 8px;
             opacity: 0;
             transition: opacity 0.4s ease;
         }
@@ -1328,11 +1328,11 @@
                             <div class="collapse-content expanded">
                                 <div>
                                     <div class="release__notes">
-                                        <h4>UI Stability & Accessibility Update</h4>
+                                        <h4>UI Scaling & Accessibility Update</h4>
                                         <ul>
-                                            <li>Scaling Persistence: Settings and Condition windows now correctly remember their width when reopened at any Font Scale.</li>
-                                            <li>Positioning Stability: Implemented scaling guards to prevent the MainWindow from "jumping" during font or resolution shifts.</li>
-                                            <li>Dynamic Layout: MainWindow now uses dynamic height scaling to ensure action buttons are never cut off.</li>
+                                            <li>Font Scaling (Beta): Introducing a new Font Scale slider. Adjust the entire UI from 0.7x to 1.5x for perfect visibility.</li>
+                                            <li>Bold Text Option: New global toggle for high-contrast, bold typography across all menus.</li>
+                                            <li>Adaptive Framing: Dynamic height logic ensures the MainWindow perfectly fits all buttons at any scale.</li>
                                         </ul>
                                     </div>
                                     <a href="downloads/KeyR_v0.3.6_win_x64.exe" class="btn btn--download btn--download-beta" download data-version="v0_3_6" onclick="checkOS(event)">

@@ -85,7 +85,7 @@
         .nav__title span { color: var(--accent); }
         .nav__links { display: flex; gap: 4px; align-items: center; justify-self: center; padding: 8px 12px; border-radius: 100px; overflow-x: auto; white-space: nowrap; max-width: 100%; scrollbar-width: none; }
         .nav__links::-webkit-scrollbar { display: none; }
-        .nav__divider { width: 1px; height: 14px; background: rgba(255, 255, 255, 0.08); margin: 0 6px; opacity: 0; transition: opacity 0.4s ease; }
+        .nav__divider { width: 2.5px; height: 14px; background: rgba(255, 255, 255, 0.15); margin: 0 8px; opacity: 0; transition: opacity 0.4s ease; }
         .nav--scrolled .nav__divider { opacity: 1; }
         .nav__links a { text-decoration: none; color: var(--text-secondary); font-weight: 500; font-size: 14px; padding: 6px 14px; border-radius: 100px; transition: all 0.2s ease; }
         .nav__links a:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
@@ -308,7 +308,7 @@
                 <div class="release-item fade-in latest">
                     <div class="release__header"><div class="release__version-info"><span class="release__version">v0.3.6 Beta</span><span class="release__tag">LATEST BETA</span></div><a href="downloads/KeyR_v0.3.6_win_x64.exe" class="btn-download" download data-version="v0_3_6" onclick="checkOS(event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download v0.3.6 Beta</a></div>
                     <div class="release__meta"><span>•</span><span>April 19, 2026</span><span>•</span><span>Windows x64</span></div>
-                    <div class="release__content"><h4>UI Stability & Accessibility Update</h4><ul><li>Scaling Persistence: Settings and Condition windows now correctly remember their width when reopened at any Font Scale.</li><li>Positioning Stability: Implemented scaling guards to prevent the MainWindow from "jumping" during font or resolution shifts.</li><li>Dynamic Layout: MainWindow now uses dynamic height scaling to ensure action buttons are never cut off.</li><li>UI Harmonization: Standardized 50px input widths, centered text alignment, and 3.0px thick dividers for better visual hierarchy.</li></ul></div>
+                    <div class="release__content"><h4>UI Scaling & Accessibility Update</h4><ul><li>Font Scaling (Beta): Introducing a new Font Scale slider. Adjust the entire UI from 0.7x to 1.5x for perfect visibility.</li><li>Bold Text Option: New global toggle for high-contrast, bold typography across all menus.</li><li>Adaptive Framing: Dynamic height logic ensures the MainWindow perfectly fits all buttons at any scale.</li><li>Layout Stability: Implemented deterministic positioning guards and standardized input fields for a professional feel.</li></ul></div>
                 </div>
 
                 <div class="release-item fade-in">
