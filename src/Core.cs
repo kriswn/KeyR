@@ -65,6 +65,8 @@ namespace KeyR
         public bool UseSmartRestart { get; set; } = false;
         public bool WaitConditionToRestart { get; set; } = false;
         public bool MatchAllConditions { get; set; } = false;
+        public double FontScale { get; set; } = 1.0;
+        public bool UseBoldText { get; set; } = false;
         public List<RestartCondition> RestartConditions { get; set; } = new List<RestartCondition>();
 
         // Cached options — avoids allocation on every serialize/deserialize call

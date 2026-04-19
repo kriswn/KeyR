@@ -8,5 +8,6 @@ obj/
 
 Create-Release.bat
 FixWebsite.py
+Publish.py
 *.py
 

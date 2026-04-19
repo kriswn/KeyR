@@ -24,10 +24,17 @@ Comprehensive usage documentation can be found online at our site. We document t
 
 All versions are actively archived within the tags of this repository. Cloud-compilation provides direct binaries for all pre-release candidates attached via GitHub Actions directly in the **Releases** tab.
 
-- `v0.1.x` - Initial SupTask MVP.
+- `v0.1.x` - Initial KeyR MVP.
+- `v0.1.1` - Fixed Persistence of Settings.
+- `v0.1.2` - Greatly increased Recording and Playback efficiency. Reduced App Size.
+- `v0.2.0` - Added Auto-Restart functionality.
+- `v0.3.0` - Complete redesign of the Settings Panel.
+- `v0.3.1` - Foreign Macro Imports. Cleaner UI.
 - `v0.3.2` - Low-Level WH Native precision transition.
-- `v0.3.3` - KeyR Rebranding and .NET 9 Bootstrap Integration.
-- `v0.3.4` - Foreign Macro Algorithms upgraded, Dynamic Form Centering engine implemented.
+- `v0.3.3` - Startup Dialogs.
+- `v0.3.4` - Foreign Macro Import Fixes. Added Responsive UI Scaling.
+- `v0.3.5` - UI/UX Overhaul. Added Pause/Resume Functionality.
+- `v0.3.6` - Further UI/UX Improvements. Added Font Scale and Bold Text options.
 
 ## Building from source
 

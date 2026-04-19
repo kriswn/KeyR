@@ -19,7 +19,7 @@
             <Setter Property="MinWidth" Value="100"/>
             <Setter Property="Padding" Value="15,0"/>
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontWeight" Value="{DynamicResource ThemeWeightSemiBold}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -69,7 +69,7 @@
             </Grid.RowDefinitions>
 
             <TextBlock x:Name="TxtTitle" Text="KeyR" 
-                       Foreground="{DynamicResource ThemeTextPrimary}" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource ThemeTextPrimary}" FontSize="18" FontWeight="{DynamicResource ThemeWeightBold}"
                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,16"/>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden" Margin="0,0,0,20">

@@ -21,8 +21,10 @@ namespace KeyR
             _isDuplicate = isNameDuplicate;
             _settings = settings;
             
-            TxtWindowTitle.Text = title.ToUpper();
+            TxtWindowTitle.Text = title;
             Condition = existingCondition ?? new RestartCondition();
+
+            ThemeEngine.ApplyFontScale(this, ThemeEngine.FontScale);
 
             // Restore position
             if (_settings.ConditionWindowX != -1 && _settings.ConditionWindowY != -1)

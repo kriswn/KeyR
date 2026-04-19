@@ -42,6 +42,8 @@ namespace KeyR
             _macroService = macroService;
             _mainWindow = mainWindow;
 
+            ThemeEngine.ApplyFontScale(this, ThemeEngine.FontScale);
+
             // Restore position
             if (_settings.SettingsWindowX != -1 && _settings.SettingsWindowY != -1)
             {
@@ -77,6 +79,7 @@ namespace KeyR
                 new SearchEntry { Container = ItemAlwaysOnTop, Section = SectionAccessibility, SectionTitle = "ACCESSIBILITY", Keywords = new[] { "always on top" } },
                 new SearchEntry { Container = ItemShowDeletion, Section = SectionAccessibility, SectionTitle = "ACCESSIBILITY", Keywords = new[] { "show deletion confirmations", "deletion", "confirmations" } },
                 new SearchEntry { Container = ItemThemeToggle, Section = SectionAccessibility, SectionTitle = "ACCESSIBILITY", Keywords = new[] { "dark theme", "light theme", "theme", "dark", "light" } },
+                new SearchEntry { Container = ItemFontScale, Section = SectionAccessibility, SectionTitle = "ACCESSIBILITY", Keywords = new[] { "font size", "font scale", "font", "scale", "zoom", "text size" } },
                 // Basic - Playback
                 new SearchEntry { Container = ItemContinuous, Section = SectionPlayback, SectionTitle = "PLAYBACK SETTINGS", Keywords = new[] { "continuous playback", "loop count", "loop", "continuous" } },
                 // Basic - Speed
@@ -104,6 +107,9 @@ namespace KeyR
             ChkAlwaysOnTop.IsChecked = _settings.AlwaysOnTop;
             CmbTheme.SelectedIndex = _settings.IsDarkTheme ? 0 : 1;
             TxtPauseHotkey.Text = _settings.PauseHotkey;
+            SliderFontScale.Value = _settings.FontScale;
+            TxtFontScaleValue.Text = _settings.FontScale.ToString("0.0") + "x";
+            ChkBoldText.IsChecked = _settings.UseBoldText;
 
             BtnToggleMatchLogic.Content = _settings.MatchAllConditions ? "Match: ALL" : "Match: ANY";
             BtnToggleMatchLogic.Tag = _settings.MatchAllConditions
@@ -385,6 +391,62 @@ namespace KeyR
         {
             TxtPauseHotkey.Text = "F12";
             PrefsChanged(null, null);
+        }
+
+        // --- Font Scale ---
+        private void SliderFontScale_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!_isLoaded || TxtFontScaleValue == null) return;
+            double scale = Math.Round(SliderFontScale.Value, 1);
+            TxtFontScaleValue.Text = scale.ToString("0.0") + "x";
+            _settings.FontScale = scale;
+            ThemeEngine.RefreshAllWindows(scale, _settings.UseBoldText);
+            _settings.Save();
+        }
+
+        private void ChkBoldText_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_isLoaded) return;
+            _settings.UseBoldText = ChkBoldText.IsChecked == true;
+            ThemeEngine.RefreshAllWindows(_settings.FontScale, _settings.UseBoldText);
+            _settings.Save();
+        }
+
+        private void BtnResetFontScale_Click(object sender, RoutedEventArgs e)
+        {
+            SliderFontScale.Value = 1.0;
+            TxtFontScaleValue.Text = "1.0x";
+            _settings.FontScale = 1.0;
+            ThemeEngine.RefreshAllWindows(1.0, _settings.UseBoldText);
+            _settings.Save();
+        }
+
+        private void TxtFontScaleValue_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ApplyFontScaleFromTextBox();
+        }
+
+        private void TxtFontScaleValue_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                ApplyFontScaleFromTextBox();
+                Keyboard.ClearFocus();
+                e.Handled = true;
+            }
+        }
+
+        private void ApplyFontScaleFromTextBox()
+        {
+            if (!_isLoaded || TxtFontScaleValue == null) return;
+            string text = TxtFontScaleValue.Text.Replace("x", "").Trim();
+            if (double.TryParse(text, out double result))
+            {
+                result = Math.Max(0.5, Math.Min(2.5, Math.Round(result, 1)));
+                SliderFontScale.Value = result;
+            }
+            // Revert invalid text to the current slider value
+            TxtFontScaleValue.Text = SliderFontScale.Value.ToString("0.0") + "x";
         }
 
         // --- Hotkey Listening ---
@@ -684,8 +746,11 @@ namespace KeyR
                         _settings.RestartConditions = imported.RestartConditions;
                         _settings.IsDarkTheme = imported.IsDarkTheme;
                         _settings.UseSmartRestart = imported.UseSmartRestart;
+                        _settings.FontScale = imported.FontScale;
+                        _settings.UseBoldText = imported.UseBoldText;
 
                         ThemeEngine.Apply(_settings.IsDarkTheme);
+                        ThemeEngine.RefreshAllWindows(_settings.FontScale, _settings.UseBoldText);
                         LoadSettingsToUI();
                         SetActiveTab(_isBasicTab);
                         _macroService.RegisterHotkeys(_settings);

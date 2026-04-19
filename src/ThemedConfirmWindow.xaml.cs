@@ -12,6 +12,7 @@ namespace KeyR
             InitializeComponent();
             TxtMessage.Text = message;
             BtnConfirm.Content = confirmText;
+            ThemeEngine.ApplyFontScale(this, ThemeEngine.FontScale);
         }
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

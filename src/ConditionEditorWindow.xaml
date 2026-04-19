@@ -1,7 +1,7 @@
 <Window x:Class="KeyR.ConditionEditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Condition Editor" Height="450" Width="350"
+        Title="Condition Editor" Width="350"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ResizeMode="NoResize" SizeToContent="Height"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
@@ -14,7 +14,8 @@
     <Window.Resources>
         <Style TargetType="TextBlock" x:Key="LabelStyle">
             <Setter Property="Foreground" Value="{DynamicResource ThemeTextSecondary}"/>
-            <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="{DynamicResource ThemeWeightSemiBold}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
             <Setter Property="FontSize" Value="12"/>
@@ -239,7 +240,7 @@
                 <Border.Effect>
                     <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="2" Opacity="0.4"/>
                 </Border.Effect>
-                <TextBlock x:Name="TxtHoverTooltip" Foreground="{DynamicResource ThemeTextPrimary}" FontSize="11" FontWeight="SemiBold"/>
+                <TextBlock x:Name="TxtHoverTooltip" Foreground="{DynamicResource ThemeTextPrimary}" FontSize="11" FontWeight="{DynamicResource ThemeWeightSemiBold}"/>
             </Border>
         </Popup>
 
@@ -258,7 +259,7 @@
             </Grid.RowDefinitions>
 
             <Grid>
-                <TextBlock x:Name="TxtWindowTitle" Text="EDIT CONDITION" Foreground="{DynamicResource ThemeTextMuted}" FontSize="11" FontWeight="ExtraBold" VerticalAlignment="Center"/>
+                <TextBlock x:Name="TxtWindowTitle" Text="Add Condition" Foreground="{DynamicResource ThemeTextMuted}" FontSize="13" FontWeight="{DynamicResource ThemeWeightExtraBold}" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Style="{StaticResource HeaderBtn}" Click="BtnMinimize_Click" Margin="0,0,4,0" Tag="Minimize">
                         <Path Data="M4,11 h16 v3 h-16 Z" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="12" Height="3" Stretch="Uniform"/>
@@ -326,7 +327,7 @@
                     </StackPanel>
 
                     <StackPanel x:Name="PanelRegion" Visibility="Collapsed">
-                        <TextBlock Text="REGION SETTINGS" Foreground="{DynamicResource ThemeTextMuted}" FontSize="11" FontWeight="Bold" Margin="0,15,0,8"/>
+                        <TextBlock Text="REGION SETTINGS" Foreground="{DynamicResource ThemeTextMuted}" FontSize="11" FontWeight="{DynamicResource ThemeWeightBold}" Margin="0,15,0,8"/>
                         <CheckBox x:Name="ChkFullScreen" Content="Full Screen Check" Foreground="{DynamicResource ThemeTextPrimary}" IsChecked="True" Checked="ChkFullScreen_Changed" Unchecked="ChkFullScreen_Changed" Margin="0,0,0,8"/>
                         
                         <Grid x:Name="GridCoordinates" Visibility="Collapsed">

@@ -29,6 +29,9 @@ namespace KeyR
             IsDark = dark;
             var r = Application.Current.Resources;
 
+            // Define Font Weight Resources
+            ApplyWeights(IsBold);
+
             if (dark)
             {
                 r["ThemeCardBg"]        = Br("#1E1E1E");
@@ -104,6 +107,103 @@ namespace KeyR
             r["ThemeAccentBright"]= Br("#F39C12");
             r["ThemeDanger"]      = Br("#e63946");
             r["ThemeDangerHover"] = Br("#ff4d4d");
+        }
+
+        public static void ApplyWeights(bool bold)
+        {
+            var r = Application.Current.Resources;
+            if (!bold)
+            {
+                r["ThemeWeightNormal"]    = FontWeights.Normal;
+                r["ThemeWeightSemiBold"]  = FontWeights.SemiBold;
+                r["ThemeWeightBold"]      = FontWeights.Bold;
+                r["ThemeWeightExtraBold"] = FontWeights.ExtraBold;
+            }
+            else
+            {
+                r["ThemeWeightNormal"]    = FontWeights.Bold;
+                r["ThemeWeightSemiBold"]  = FontWeights.Bold;
+                r["ThemeWeightBold"]      = FontWeights.ExtraBold;
+                r["ThemeWeightExtraBold"] = FontWeights.Black;
+            }
+        }
+
+        // --- Font Scale & Accessibility ---
+        public static double FontScale { get; set; } = 1.0;
+        public static bool IsBold { get; set; } = false;
+
+        public static void ApplyFontScale(Window window, double scale)
+        {
+            FontScale = scale;
+            window.FontWeight = IsBold ? FontWeights.Bold : FontWeights.Normal;
+
+            // Handle Popups (ToolTips/Notifications) which are outside the normal visual tree
+            string[] popupNames = { "HoverTooltip", "NotificationPopup" };
+            foreach (var name in popupNames)
+            {
+                if (window.FindName(name) is System.Windows.Controls.Primitives.Popup popup)
+                {
+                    if (popup.Child is FrameworkElement child)
+                    {
+                        child.LayoutTransform = new ScaleTransform(scale, scale);
+                    }
+                }
+            }
+
+            if (window is MainWindow) return;
+
+            // Use deterministic base sizes for known windows to avoid capture errors at non-unity scales
+            double baseWidth = 350; // Default for Settings and Condition windows
+            
+            if (window.Tag == null)
+            {
+                // Capture if possible, but prioritize known defaults
+                double w = double.IsNaN(window.Width) ? window.ActualWidth : window.Width;
+                if (w > 0) baseWidth = w;
+                
+                window.Tag = baseWidth;
+            }
+            else
+            {
+                baseWidth = (double)window.Tag;
+            }
+
+            if (window.Content is FrameworkElement root)
+            {
+                root.LayoutTransform = new ScaleTransform(scale, scale);
+
+                // Force width scaling strictly
+                double targetWidth = baseWidth * scale;
+                window.MinWidth = 0; // Unlock to allow shrinking
+                window.MaxWidth = double.PositiveInfinity;
+                
+                window.Width = targetWidth;
+                window.MinWidth = targetWidth;
+                window.MaxWidth = targetWidth;
+
+                window.UpdateLayout();
+            }
+        }
+
+        public static void RefreshAllWindows(double scale, bool bold)
+        {
+            FontScale = scale;
+            IsBold = bold;
+
+            // Re-apply weights to resources
+            ApplyWeights(bold);
+
+            foreach (Window win in Application.Current.Windows)
+            {
+                if (win is MainWindow mw)
+                {
+                    mw.ApplyResolutionScaling(); // Will also apply font scale and bold internally
+                }
+                else
+                {
+                    ApplyFontScale(win, scale);
+                }
+            }
         }
     }
 }

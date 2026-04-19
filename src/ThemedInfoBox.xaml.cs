@@ -22,6 +22,8 @@ public partial class ThemedInfoBox : Window
             BtnSecondary.Content = secondaryText;
             BtnSecondary.Visibility = Visibility.Visible;
         }
+
+        ThemeEngine.ApplyFontScale(this, ThemeEngine.FontScale);
     }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

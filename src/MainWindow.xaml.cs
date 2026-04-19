@@ -15,6 +15,7 @@ namespace KeyR
         private Settings _settings;
         private MacroService _macroService;
         private bool _isLoaded = false;
+        private bool _isScaling = false;
         private string _macroName = "None";
 
         private SettingsWindow _settingsWindow = null;
@@ -47,6 +48,12 @@ namespace KeyR
             _macroService = new MacroService();
             _macroService.OnStatusChanged += UpdateStatus;
             
+            // Apply theme/font settings from saved state
+            ThemeEngine.FontScale = _settings.FontScale;
+            ThemeEngine.IsBold = _settings.UseBoldText;
+            ThemeEngine.ApplyWeights(_settings.UseBoldText);
+            ThemeEngine.Apply( _settings.IsDarkTheme );
+
             this.Loaded += MainWindow_Loaded;
             
             this.Topmost = _settings.AlwaysOnTop;
@@ -77,20 +84,47 @@ namespace KeyR
             // Setup recording timer
             _recordingTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
             _recordingTimer.Tick += RecordingTimer_Tick;
+
+            // Apply font scale from settings
+            // Apply scaling
+            ApplyResolutionScaling();
         }
 
-        private void ApplyResolutionScaling()
+        public void ApplyResolutionScaling()
         {
-            double screenHeight = SystemParameters.PrimaryScreenHeight;
-            double scale = screenHeight / 1080.0;
-            if (scale < 0.8) scale = 0.8;
-            if (scale > 1.2) scale = 1.2;
+            _isScaling = true;
+            try {
+                double screenHeight = SystemParameters.PrimaryScreenHeight;
+                double resScale = screenHeight / 1080.0;
+                if (resScale < 0.8) resScale = 0.8;
+                if (resScale > 1.2) resScale = 1.2;
 
-            var st = new ScaleTransform(scale, scale);
+                double finalScale = resScale * ThemeEngine.FontScale;
+            var st = new ScaleTransform(finalScale, finalScale);
             MainBorder.LayoutTransform = st;
             
-            this.Width = 300 * scale;
-            this.Height = 117 * scale;
+            this.FontWeight = ThemeEngine.IsBold ? FontWeights.Bold : FontWeights.Normal;
+            // Temporarily unlock constraints to allow shrinking
+            this.MinWidth = 0;
+            this.MinHeight = 0;
+            this.MaxWidth = double.PositiveInfinity;
+            this.MaxHeight = double.PositiveInfinity;
+
+            this.Width = 300 * finalScale;
+
+            this.MinWidth = 300 * finalScale;
+            this.MaxWidth = 300 * finalScale;
+
+            // Scale fixed popups
+            if (NotificationPopup.Child is FrameworkElement notifChild)
+                notifChild.LayoutTransform = st;
+            if (HoverTooltip.Child is FrameworkElement tooltipChild)
+                tooltipChild.LayoutTransform = st;
+            }
+            finally
+            {
+                _isScaling = false;
+            }
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -402,7 +436,7 @@ namespace KeyR
         // --- Window Events ---
         private void Window_LocationChanged(object sender, EventArgs e)
         {
-            if (this.IsLoaded)
+            if (this.IsLoaded && !_isScaling)
             {
                 _settings.X = this.Left;
                 _settings.Y = this.Top;
