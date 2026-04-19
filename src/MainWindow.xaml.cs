@@ -55,18 +55,22 @@ namespace KeyR
             ThemeEngine.Apply( _settings.IsDarkTheme );
 
             this.Loaded += MainWindow_Loaded;
-            
             this.Topmost = _settings.AlwaysOnTop;
-            
             _macroService.RegisterHotkeys(_settings);
+
+            ApplyResolutionScaling();
             
             if (_settings.X != -1 && _settings.Y != -1)
             {
-                var screenWidth = SystemParameters.VirtualScreenWidth;
-                var screenHeight = SystemParameters.VirtualScreenHeight;
+                // Ensure position is within virtual screen bounds
+                // Use a small buffer to avoid snapping issues
+                double virtualLeft = SystemParameters.VirtualScreenLeft;
+                double virtualTop = SystemParameters.VirtualScreenTop;
+                double virtualWidth = SystemParameters.VirtualScreenWidth;
+                double virtualHeight = SystemParameters.VirtualScreenHeight;
 
-                if (_settings.X >= 0 && _settings.X <= screenWidth - this.Width &&
-                    _settings.Y >= 0 && _settings.Y <= screenHeight - this.Height)
+                if (_settings.X >= virtualLeft - 10 && _settings.X <= virtualLeft + virtualWidth &&
+                    _settings.Y >= virtualTop - 10 && _settings.Y <= virtualTop + virtualHeight)
                 {
                     this.WindowStartupLocation = WindowStartupLocation.Manual;
                     this.Left = _settings.X;
@@ -75,7 +79,6 @@ namespace KeyR
             }
 
             _isLoaded = true;
-            ApplyResolutionScaling();
 
             // Setup countdown timer for playback
             _countdownTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
@@ -84,10 +87,6 @@ namespace KeyR
             // Setup recording timer
             _recordingTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
             _recordingTimer.Tick += RecordingTimer_Tick;
-
-            // Apply font scale from settings
-            // Apply scaling
-            ApplyResolutionScaling();
         }
 
         public void ApplyResolutionScaling()
@@ -120,6 +119,8 @@ namespace KeyR
                 notifChild.LayoutTransform = st;
             if (HoverTooltip.Child is FrameworkElement tooltipChild)
                 tooltipChild.LayoutTransform = st;
+            
+            this.UpdateLayout();
             }
             finally
             {

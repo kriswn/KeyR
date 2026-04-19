@@ -62,13 +62,15 @@ namespace KeyR
             _isLoaded = true;
 
             // Track main window movements to update indicators dynamically
-            _mainWindow.LocationChanged += (s, ev) =>
+            EventHandler locationHandler = (s, ev) =>
             {
                 if (!_isLoaded) return;
                 _settings.X = _mainWindow.Left;
                 _settings.Y = _mainWindow.Top;
                 UpdatePositionUI();
             };
+            _mainWindow.LocationChanged += locationHandler;
+            this.Closed += (s, ev) => _mainWindow.LocationChanged -= locationHandler;
         }
 
         private void BuildSearchIndex()
@@ -348,19 +350,29 @@ namespace KeyR
 
             if (double.TryParse(TxtPosX.Text, out double x))
             {
-                double maxX = SystemParameters.VirtualScreenWidth - _mainWindow.ActualWidth;
-                if (x < 0) x = 0;
-                if (x > maxX) x = Math.Max(0, maxX);
+                double virtualLeft = SystemParameters.VirtualScreenLeft;
+                double virtualWidth = SystemParameters.VirtualScreenWidth;
+                double maxX = virtualLeft + virtualWidth - _mainWindow.ActualWidth;
+                
+                if (x < virtualLeft) x = virtualLeft;
+                if (x > maxX) x = Math.Max(virtualLeft, maxX);
+                
                 _settings.X = x;
-                _mainWindow.Left = x;
+                if (Math.Abs(_mainWindow.Left - x) > 0.5)
+                    _mainWindow.Left = x;
             }
             if (double.TryParse(TxtPosY.Text, out double y))
             {
-                double maxY = SystemParameters.VirtualScreenHeight - _mainWindow.ActualHeight;
-                if (y < 0) y = 0;
-                if (y > maxY) y = Math.Max(0, maxY);
+                double virtualTop = SystemParameters.VirtualScreenTop;
+                double virtualHeight = SystemParameters.VirtualScreenHeight;
+                double maxY = virtualTop + virtualHeight - _mainWindow.ActualHeight;
+
+                if (y < virtualTop) y = virtualTop;
+                if (y > maxY) y = Math.Max(virtualTop, maxY);
+
                 _settings.Y = y;
-                _mainWindow.Top = y;
+                if (Math.Abs(_mainWindow.Top - y) > 0.5)
+                    _mainWindow.Top = y;
             }
 
             _mainWindow.Topmost = _settings.AlwaysOnTop;
